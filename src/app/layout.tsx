@@ -1,6 +1,8 @@
 import { type Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
+import { AppLayout } from '@/components/AppLayout';
+
 import './globals.css';
 import { type RootLayoutProps } from './types';
 
@@ -24,7 +26,9 @@ export default function RootLayout(props: RootLayoutProps) {
 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AppLayout>{children}</AppLayout>
+      </body>
     </html>
   );
 }

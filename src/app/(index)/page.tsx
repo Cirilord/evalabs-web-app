@@ -7,7 +7,7 @@ export default function HomePage(props: HomePageProps) {
   void props;
 
   return (
-    <main className="grid min-h-screen place-items-center bg-muted/30 p-6">
+    <main className="grid min-h-full place-items-center bg-muted/30 p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>shadcn/ui</CardTitle>
