@@ -103,6 +103,7 @@ Treat `src` as the application's global scope.
 - `src/hooks`: hooks shared by the application.
 - `src/lib`: integrations, clients, configuration, and reusable infrastructure code.
 - `src/helpers`: helper functions containing presentation or domain rules.
+- `src/ui`: shadcn UI components shared by the application.
 - `src/utils`: small, pure, generic utility functions.
 
 Create these directories only when they contain code. Do not add empty directories.
