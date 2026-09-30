@@ -1,0 +1,8 @@
+.agents/skills/
+node_modules/
+.next/
+out/
+build/
+coverage/
+next-env.d.ts
+yarn.lock
