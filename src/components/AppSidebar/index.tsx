@@ -1,4 +1,4 @@
-import { SettingsIcon } from 'lucide-react';
+import { PlusIcon, SettingsIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -7,6 +7,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -69,6 +70,12 @@ export function AppSidebar(props: AppSidebarProps) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Automations</SidebarGroupLabel>
+          <SidebarGroupAction
+            aria-label="Create automation"
+            render={<Link href="/automations/new" />}
+          >
+            <PlusIcon />
+          </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
               {automationItems.map((automation) => (
