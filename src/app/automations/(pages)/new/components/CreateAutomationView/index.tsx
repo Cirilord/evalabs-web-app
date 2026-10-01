@@ -16,6 +16,15 @@ import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/ui/dialog';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import {
@@ -469,56 +478,49 @@ export function CreateAutomationView(props: CreateAutomationViewProps) {
           </div>
         </form>
       </div>
-      {isPromptOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
-          <div
-            className="flex max-h-[calc(100svh-2rem)] w-full max-w-3xl flex-col rounded-lg border bg-background shadow-lg"
-            role="dialog"
-          >
-            <div className="border-b px-6 py-5">
-              <h2 className="text-lg font-semibold">Generate script with AI</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Copy this prompt into your preferred AI assistant to generate the Python script.
-              </p>
-            </div>
-            <div className="p-6">
-              <Textarea
-                className="min-h-80 resize-none font-mono text-xs"
-                readOnly
-                value={prompt()}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3 border-t px-6 py-4">
-              <p className="text-sm text-destructive">
-                {copyState === 'error' && 'Could not copy the prompt. Select and copy it manually.'}
-              </p>
-              <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={() => setIsPromptOpen(false)}>
-                  Close
-                </Button>
-                <Button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(prompt());
-                      setCopyState('copied');
-                    } catch {
-                      setCopyState('error');
-                    }
-                  }}
-                >
-                  {copyState === 'copied' ? (
-                    <CheckIcon data-icon="inline-start" />
-                  ) : (
-                    <CopyIcon data-icon="inline-start" />
-                  )}
-                  {copyState === 'copied' ? 'Copied' : 'Copy prompt'}
-                </Button>
-              </div>
-            </div>
+      <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
+        <DialogContent className="flex max-h-[calc(100svh-2rem)] max-w-3xl flex-col gap-0 p-0">
+          <DialogHeader className="border-b px-6 py-5">
+            <DialogTitle>Generate script with AI</DialogTitle>
+            <DialogDescription>
+              Copy this prompt into your preferred AI assistant to generate the Python script.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6">
+            <Textarea
+              className="min-h-80 resize-none font-mono text-xs"
+              readOnly
+              value={prompt()}
+            />
           </div>
-        </div>
-      )}
+          <DialogFooter className="items-center justify-between border-t px-6 py-4">
+            <p className="text-sm text-destructive">
+              {copyState === 'error' && 'Could not copy the prompt. Select and copy it manually.'}
+            </p>
+            <div className="flex gap-3">
+              <DialogClose>Close</DialogClose>
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(prompt());
+                    setCopyState('copied');
+                  } catch {
+                    setCopyState('error');
+                  }
+                }}
+              >
+                {copyState === 'copied' ? (
+                  <CheckIcon data-icon="inline-start" />
+                ) : (
+                  <CopyIcon data-icon="inline-start" />
+                )}
+                {copyState === 'copied' ? 'Copied' : 'Copy prompt'}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

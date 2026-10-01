@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 import { prisma } from '@/lib/prisma';
 import { actionClient } from '@/lib/safe-action';
@@ -24,6 +25,5 @@ export const createAutomation = actionClient
     });
 
     revalidatePath('/');
-
-    return { id: automation.id };
+    redirect(`/automations/${automation.id}`);
   });

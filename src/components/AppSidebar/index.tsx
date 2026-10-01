@@ -2,6 +2,7 @@ import { PlusIcon, SettingsIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { prisma } from '@/lib/prisma';
 import {
   Sidebar,
   SidebarContent,
@@ -18,12 +19,6 @@ import {
 } from '@/ui/sidebar';
 
 import { type AppSidebarProps, type SidebarItem, type SidebarItemStatus } from './types';
-
-const automationItems: readonly SidebarItem[] = [
-  { id: 'daily-sales-report', name: 'Daily sales report', status: 'running' },
-  { id: 'customer-sync', name: 'Customer synchronization', status: 'completed' },
-  { id: 'invoice-processing', name: 'Invoice processing', status: 'queued' },
-];
 
 const workflowItems: readonly SidebarItem[] = [
   { id: 'customer-onboarding', name: 'Customer onboarding', status: 'completed' },
@@ -44,8 +39,12 @@ function getStatusClassName(status: SidebarItemStatus) {
   }
 }
 
-export function AppSidebar(props: AppSidebarProps) {
+export async function AppSidebar(props: AppSidebarProps) {
   void props;
+  const automationItems = await prisma.automation.findMany({
+    orderBy: { updatedAt: 'desc' },
+    select: { id: true, name: true },
+  });
 
   return (
     <Sidebar collapsible="icon">
@@ -80,10 +79,13 @@ export function AppSidebar(props: AppSidebarProps) {
             <SidebarMenu>
               {automationItems.map((automation) => (
                 <SidebarMenuItem key={automation.id}>
-                  <SidebarMenuButton tooltip={automation.name} type="button">
+                  <SidebarMenuButton
+                    render={<Link href={`/automations/${automation.id}`} />}
+                    tooltip={automation.name}
+                  >
                     <span
                       aria-hidden="true"
-                      className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-current ${getStatusClassName(automation.status)}`}
+                      className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-current ${getStatusClassName('queued')}`}
                     >
                       <span className="size-1.5 rounded-full bg-current" />
                     </span>
