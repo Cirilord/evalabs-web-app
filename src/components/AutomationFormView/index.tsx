@@ -38,9 +38,9 @@ import {
 } from '@/ui/select';
 import { Textarea } from '@/ui/textarea';
 
-import { type CreateAutomationViewProps, type CreateAutomationViewValues } from './types';
-import { createAutomation } from '../../action';
-import { createAutomationSchema } from '../../schema/create-automation.schema';
+import { createAutomation, updateAutomation } from './action';
+import { createAutomationSchema } from './schema/automation-form.schema';
+import { type AutomationFormViewProps, type AutomationFormViewValues } from './types';
 
 const DEFAULT_SCRIPT = `def main():\n  # Add your automation logic here.\n  pass\n`;
 const PORT_TYPES = ['text', 'file', 'number', 'boolean'] as const;
@@ -59,8 +59,10 @@ const LIBRARIES = [
   'requests',
 ];
 
-export function CreateAutomationView(props: CreateAutomationViewProps) {
-  void props;
+export function AutomationFormView(props: AutomationFormViewProps) {
+  const { automation } = props;
+  const cancelHref = automation ? `/automations/${automation.id}` : '/';
+  const isEditing = Boolean(automation);
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [libraryQuery, setLibraryQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,16 +76,16 @@ export function CreateAutomationView(props: CreateAutomationViewProps) {
     setError,
     setValue,
     trigger,
-  } = useForm<CreateAutomationViewValues>({
+  } = useForm<AutomationFormViewValues>({
     defaultValues: {
-      description: '',
-      inputs: [],
-      libraries: [],
-      name: '',
-      outputs: [],
-      script: DEFAULT_SCRIPT,
-      scriptMode: 'inline',
-      scriptPath: null,
+      description: automation?.description ?? '',
+      inputs: automation?.inputs ?? [],
+      libraries: automation?.libraries ?? [],
+      name: automation?.name ?? '',
+      outputs: automation?.outputs ?? [],
+      script: automation?.script ?? DEFAULT_SCRIPT,
+      scriptMode: automation?.scriptSource === 'file' ? 'file' : 'inline',
+      scriptPath: automation?.scriptPath ?? null,
     },
     resolver: zodResolver(createAutomationSchema),
   });
@@ -119,10 +121,12 @@ export function CreateAutomationView(props: CreateAutomationViewProps) {
     const values = getValues();
     return `Write a Python automation named "${values.name || 'Untitled automation'}".\n\nDescription: ${values.description || 'No description'}\n\nImplementation contract:\n- Respond with only complete Python code.\n- Define ${values.inputs.length ? 'main(inputs: dict)' : 'main()'}.\n- Use print() for execution logs when useful.\n- Never call input() or require interactive user input.\n\nInputs:\n${values.inputs.length ? values.inputs.map((input) => `- ${input.name || '<name>'} (${input.type}): ${input.description}`).join('\n') : '- No inputs'}\n\nLibraries:\n${values.libraries.length ? values.libraries.map((library) => `- ${library.name} (${library.version})`).join('\n') : '- No libraries'}\n\nOutputs:\n${values.outputs.length ? values.outputs.map((output) => `- ${output.name || '<name>'} (${output.type}): ${output.description}`).join('\n') : '- {}'}`;
   }
-  async function submit(data: CreateAutomationViewValues) {
+  async function submit(data: AutomationFormViewValues) {
     setIsSubmitting(true);
     try {
-      const result = await createAutomation(data);
+      const result = automation
+        ? await updateAutomation({ ...data, id: automation.id })
+        : await createAutomation(data);
 
       if (result.serverError) {
         setError('root', { message: result.serverError });
@@ -233,9 +237,13 @@ export function CreateAutomationView(props: CreateAutomationViewProps) {
       <div className="w-full">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Create automation</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {isEditing ? 'Edit automation' : 'Create automation'}
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Start with a name, a short description, and the script that runs the automation.
+              {isEditing
+                ? 'Update the automation name, configuration, and script.'
+                : 'Start with a name, a short description, and the script that runs the automation.'}
             </p>
           </div>
           <Button
@@ -469,11 +477,22 @@ export function CreateAutomationView(props: CreateAutomationViewProps) {
           )}
           {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
           <div className="flex justify-end gap-3">
-            <Button nativeButton={false} render={<Link href="/" />} type="button" variant="outline">
+            <Button
+              nativeButton={false}
+              render={<Link href={cancelHref} />}
+              type="button"
+              variant="outline"
+            >
               Cancel
             </Button>
             <Button disabled={isSubmitting} type="submit">
-              {isSubmitting ? 'Creating...' : 'Create automation'}
+              {isSubmitting
+                ? isEditing
+                  ? 'Saving...'
+                  : 'Creating...'
+                : isEditing
+                  ? 'Save automation'
+                  : 'Create automation'}
             </Button>
           </div>
         </form>

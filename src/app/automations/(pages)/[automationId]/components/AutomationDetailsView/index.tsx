@@ -1,4 +1,5 @@
 import { LoaderCircleIcon, PencilIcon } from 'lucide-react';
+import Link from 'next/link';
 
 import { Button } from '@/ui/button';
 
@@ -36,7 +37,12 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <EditScriptButton automationId={automation.id} script={automation.script} />
-            <Button type="button" variant="outline">
+            <Button
+              nativeButton={false}
+              render={<Link href={`/automations/${automation.id}/edit`} />}
+              type="button"
+              variant="outline"
+            >
               <PencilIcon data-icon="inline-start" />
               Edit automation
             </Button>

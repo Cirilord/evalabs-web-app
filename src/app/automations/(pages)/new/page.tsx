@@ -1,8 +1,9 @@
-import { CreateAutomationView } from './components/CreateAutomationView';
+import { AutomationFormView } from '@/components/AutomationFormView';
+
 import { type CreateAutomationPageProps } from './types';
 
 export default function CreateAutomationPage(props: CreateAutomationPageProps) {
   void props;
 
-  return <CreateAutomationView />;
+  return <AutomationFormView />;
 }
