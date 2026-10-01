@@ -9,14 +9,14 @@ import { completeAutomationRunSchema, runAutomationSchema } from './schema/run-a
 
 export const completeAutomationRun = actionClient
   .inputSchema(completeAutomationRunSchema)
-  .action(async ({ parsedInput: { error, logs, outputs, runId, status } }) => {
+  .action(async ({ parsedInput: { error, logs, outputs, runId, runnerVersion, status } }) => {
     const run = await prisma.run.update({
       data: {
         error,
         finishedAt: new Date(),
         logs,
         outputsJson: outputs as never,
-        runnerVersion: 'Pyodide 314.0.7',
+        runnerVersion,
         status,
       },
       where: { id: runId },
@@ -27,13 +27,14 @@ export const completeAutomationRun = actionClient
 
 export const runAutomation = actionClient
   .inputSchema(runAutomationSchema)
-  .action(async ({ parsedInput: { automationId, inputs } }) => {
+  .action(async ({ parsedInput: { automationId, inputs, runnerVersion } }) => {
     const now = new Date();
     const run = await prisma.run.create({
       data: {
         automationId,
         inputsJson: inputs as never,
         outputsJson: {},
+        runnerVersion,
         startedAt: now,
         status: 'running',
       },

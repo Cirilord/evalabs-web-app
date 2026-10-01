@@ -1,5 +1,11 @@
-const PYODIDE_VERSION = '314.0.7';
-const PYODIDE_PACKAGE_BASE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+const PYODIDE_RUNNERS = {
+  'pyodide-022': { pyodideVersion: '0.22.1', pythonVersion: '3.10' },
+  'pyodide-025': { pyodideVersion: '0.25.1', pythonVersion: '3.11' },
+  'pyodide-026': { pyodideVersion: '0.26.4', pythonVersion: '3.12' },
+  'pyodide-029': { pyodideVersion: '0.29.3', pythonVersion: '3.13' },
+  'pyodide-314': { pyodideVersion: '314.0.7', pythonVersion: '3.14' },
+};
+const pyodidePromises = new Map();
 
 function getRequirement(library) {
   return library.version === 'latest' ? library.name : `${library.name}==${library.version}`;
@@ -11,16 +17,27 @@ function getInputFilePath(inputName, file) {
   return `/tmp/${inputName}-${safeFileName}`;
 }
 
-function getPyodide() {
-  return import(`${PYODIDE_PACKAGE_BASE_URL}pyodide.mjs`).then(({ loadPyodide }) =>
-    loadPyodide({ indexURL: PYODIDE_PACKAGE_BASE_URL })
+function getPyodide(runnerId) {
+  const runner = PYODIDE_RUNNERS[runnerId];
+  if (!runner) throw new Error(`Unsupported Pyodide runner: ${runnerId}`);
+
+  const pyodide = pyodidePromises.get(runnerId);
+  if (pyodide) return pyodide;
+
+  const packageBaseUrl = `https://cdn.jsdelivr.net/pyodide/v${runner.pyodideVersion}/full/`;
+  const promise = import(`${packageBaseUrl}pyodide.mjs`).then(({ loadPyodide }) =>
+    loadPyodide({ indexURL: packageBaseUrl })
   );
+  pyodidePromises.set(runnerId, promise);
+
+  return promise;
 }
 
 async function executeAutomation(message) {
-  const { expectsOutputs, files, inputs, libraries, script } = message;
+  const { expectsOutputs, files, inputs, libraries, runnerId, script } = message;
   const logs = [];
-  const pyodide = await getPyodide();
+  const runner = PYODIDE_RUNNERS[runnerId];
+  const pyodide = await getPyodide(runnerId);
 
   pyodide.setStdout({ batched: (output) => logs.push(output) });
   pyodide.setStderr({ batched: (output) => logs.push(output) });
@@ -53,7 +70,7 @@ async function executeAutomation(message) {
     return {
       logs: logs.join('\n'),
       outputs: JSON.parse(String(serializedOutputs)),
-      runnerVersion: `Pyodide ${PYODIDE_VERSION}`,
+      runnerVersion: `Pyodide ${runner.pyodideVersion} (Python ${runner.pythonVersion})`,
     };
   } catch (error) {
     throw {

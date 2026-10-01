@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import { AppLayout } from '@/components/AppLayout';
 import { LocaleProvider } from '@/contexts/LocaleProvider';
+import { RunnerProvider } from '@/contexts/RunnerProvider';
 import { TelemetryProvider } from '@/contexts/TelemetryProvider';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
 
@@ -34,9 +35,11 @@ export default function RootLayout(props: RootLayoutProps) {
       <body>
         <LocaleProvider>
           <TelemetryProvider>
-            <ThemeProvider>
-              <AppLayout>{children}</AppLayout>
-            </ThemeProvider>
+            <RunnerProvider>
+              <ThemeProvider>
+                <AppLayout>{children}</AppLayout>
+              </ThemeProvider>
+            </RunnerProvider>
           </TelemetryProvider>
         </LocaleProvider>
       </body>

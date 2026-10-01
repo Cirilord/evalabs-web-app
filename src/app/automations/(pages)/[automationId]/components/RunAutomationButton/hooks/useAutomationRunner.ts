@@ -1,3 +1,5 @@
+import { type PyodideRunnerId } from '@/lib/runner';
+
 import { type AutomationLibrary } from '../types';
 
 export class AutomationExecutionError extends Error {
@@ -20,6 +22,7 @@ type RunAutomationInBrowserOptions = Readonly<{
   files: Readonly<Record<string, File>>;
   inputs: Readonly<Record<string, boolean | number | string>>;
   libraries: readonly AutomationLibrary[];
+  runnerId: PyodideRunnerId;
   script: string;
 }>;
 

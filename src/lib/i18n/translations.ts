@@ -159,6 +159,9 @@ Apply the contract above with these specific user instructions:
     'settings.general': 'General',
     'settings.language': 'Language',
     'settings.languageDescription': 'Choose the display language for this device.',
+    'settings.pythonRunner': 'Python runner',
+    'settings.pythonRunnerDescription':
+      'Choose the Pyodide and Python version used to run automations.',
     'settings.python': 'Python',
     'settings.notInstalled': 'not installed',
     'settings.pythonDescription':
@@ -422,6 +425,9 @@ Aplique o contrato acima seguindo estas instruções específicas:
     'settings.general': 'Geral',
     'settings.language': 'Idioma',
     'settings.languageDescription': 'Escolha o idioma de exibição para este dispositivo.',
+    'settings.pythonRunner': 'Executor Python',
+    'settings.pythonRunnerDescription':
+      'Escolha a versão do Pyodide e do Python usada para executar automações.',
     'settings.python': 'Python',
     'settings.notInstalled': 'não instalado',
     'settings.pythonDescription':

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useRunner } from '@/contexts/RunnerProvider';
+import { getPyodideRunnerLabel } from '@/lib/runner';
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
 import {
@@ -26,6 +28,8 @@ import { type RunAutomationButtonProps } from './types';
 export function RunAutomationButton(props: RunAutomationButtonProps) {
   const { automationId, automationName, expectsOutputs, inputs, libraries, script } = props;
   const { t } = useTranslation();
+  const { runnerId } = useRunner();
+  const runnerVersion = getPyodideRunnerLabel(runnerId);
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<Record<string, File>>({});
   const [isPending, setIsPending] = useState(false);
@@ -65,7 +69,7 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         return [input.name, input.type === 'number' && value !== '' ? Number(value) : value];
       })
     );
-    const result = await runAutomation({ automationId, inputs: normalizedInputs });
+    const result = await runAutomation({ automationId, inputs: normalizedInputs, runnerVersion });
 
     if (result.serverError) {
       setError(result.serverError);
@@ -85,6 +89,7 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         inputs: normalizedInputs,
         libraries,
         expectsOutputs,
+        runnerId,
         script,
       });
       const completion = await completeAutomationRun({
@@ -92,6 +97,7 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         logs: execution.logs,
         outputs: execution.outputs,
         runId: result.data.id,
+        runnerVersion: execution.runnerVersion,
         status: 'succeeded',
       });
 
@@ -109,6 +115,7 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         logs: executionLogs,
         outputs: {},
         runId: result.data.id,
+        runnerVersion,
         status: 'failed',
       });
 
