@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "nodejs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum AutomationScriptSource {
+  inline
+  file
+  managed
+  external
+}
+
+enum RunnableType {
+  automation
+  workflow
+}
+
+enum RunStatus {
+  preparing
+  running
+  succeeded
+  failed
+}
+
+enum WorkflowNodeRunStatus {
+  preparing
+  running
+  succeeded
+  failed
+  skipped
+}
+
+model Automation {
+  id           String                 @id @default(uuid(7))
+  name         String
+  description  String                 @default("")
+  script       String                 @default("")
+  scriptSource AutomationScriptSource @default(inline) @map("script_source")
+  scriptPath   String?                @map("script_path")
+
+  inputsJson    Json @map("inputs_json")
+  librariesJson Json @map("libraries_json")
+  outputsJson   Json @map("outputs_json")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  runs Run[]
+
+  @@map("automations")
+}
+
+model Run {
+  id            String    @id @default(uuid(7))
+  status        RunStatus
+  logs          String    @default("")
+  error         String    @default("")
+  runnerVersion String    @default("") @map("runner_version")
+
+  inputsJson  Json @map("inputs_json")
+  outputsJson Json @map("outputs_json")
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  startedAt  DateTime  @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  automationId String     @map("automation_id")
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@map("runs")
+}
+
+model Workflow {
+  id          String @id @default(uuid(7))
+  name        String
+  description String @default("")
+
+  inputsJson         Json @map("inputs_json")
+  outputsJson        Json @map("outputs_json")
+  outputBindingsJson Json @map("output_bindings_json")
+  startJson          Json @map("start_json")
+  outputJson         Json @map("output_json")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  connections WorkflowConnection[]
+  nodes       WorkflowNode[]
+  runs        WorkflowRun[]
+
+  @@map("workflows")
+}
+
+model WorkflowNode {
+  id           String       @id @default(uuid(7))
+  runnableId   String       @map("runnable_id")
+  runnableType RunnableType @map("runnable_type")
+
+  fixedInputsJson   Json @map("fixed_inputs_json")
+  inputBindingsJson Json @map("input_bindings_json")
+
+  positionX Float @map("position_x")
+  positionY Float @map("position_y")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  workflowId String   @map("workflow_id")
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  sourceConnections WorkflowConnection[] @relation("SourceWorkflowNode")
+  targetConnections WorkflowConnection[] @relation("TargetWorkflowNode")
+
+  @@map("workflow_nodes")
+}
+
+model WorkflowConnection {
+  id               String @id @default(uuid(7))
+  sourceOutputName String @map("source_output_name")
+  targetInputName  String @map("target_input_name")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  workflowId   String       @map("workflow_id")
+  workflow     Workflow     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  sourceNodeId String       @map("source_node_id")
+  sourceNode   WorkflowNode @relation("SourceWorkflowNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  targetNodeId String       @map("target_node_id")
+  targetNode   WorkflowNode @relation("TargetWorkflowNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  @@map("workflow_connections")
+}
+
+model WorkflowRun {
+  id     String    @id @default(uuid(7))
+  status RunStatus
+  logs   String    @default("")
+  error  String    @default("")
+
+  inputsJson  Json @map("inputs_json")
+  outputsJson Json @map("outputs_json")
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  startedAt  DateTime  @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  workflowId String   @map("workflow_id")
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  nodeRuns WorkflowNodeRun[]
+
+  @@map("workflow_runs")
+}
+
+model WorkflowNodeRun {
+  id          String                @id @default(uuid(7))
+  status      WorkflowNodeRunStatus
+  logs        String                @default("")
+  error       String                @default("")
+  nodeName    String                @default("") @map("node_name")
+  nestedRunId String?               @map("nested_run_id")
+
+  inputsJson  Json @map("inputs_json")
+  outputsJson Json @map("outputs_json")
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  startedAt  DateTime  @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  workflowRunId  String      @map("workflow_run_id")
+  workflowRun    WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+  workflowNodeId String      @map("workflow_node_id")
+
+  @@map("workflow_node_runs")
+}
