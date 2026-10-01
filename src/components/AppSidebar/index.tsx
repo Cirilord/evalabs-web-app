@@ -1,4 +1,4 @@
-import { PlusIcon, SettingsIcon } from 'lucide-react';
+import { PlusIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -18,6 +18,7 @@ import {
   SidebarRail,
 } from '@/ui/sidebar';
 
+import { SettingsDialog } from './components/SettingsDialog';
 import { type AppSidebarProps, type SidebarItem, type SidebarItemStatus } from './types';
 
 const workflowItems: readonly SidebarItem[] = [
@@ -121,10 +122,7 @@ export async function AppSidebar(props: AppSidebarProps) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton disabled tooltip="Settings">
-              <SettingsIcon />
-              <span>Settings</span>
-            </SidebarMenuButton>
+            <SettingsDialog />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

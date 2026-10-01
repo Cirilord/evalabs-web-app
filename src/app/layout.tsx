@@ -2,6 +2,7 @@ import { type Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
 import { AppLayout } from '@/components/AppLayout';
+import { ThemeProvider } from '@/contexts/ThemeProvider';
 
 import './globals.css';
 import { type RootLayoutProps } from './types';
@@ -29,7 +30,9 @@ export default function RootLayout(props: RootLayoutProps) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <AppLayout>{children}</AppLayout>
+        <ThemeProvider>
+          <AppLayout>{children}</AppLayout>
+        </ThemeProvider>
       </body>
     </html>
   );
