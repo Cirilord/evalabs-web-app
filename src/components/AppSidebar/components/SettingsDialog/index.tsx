@@ -5,7 +5,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useLocale } from '@/contexts/LocaleProvider';
+import { useTelemetry } from '@/contexts/TelemetryProvider';
 import { useTheme } from '@/contexts/ThemeProvider';
+import { Checkbox } from '@/ui/checkbox';
 import {
   Dialog,
   DialogClose,
@@ -44,6 +46,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
   void props;
   const [isOpen, setIsOpen] = useState(false);
   const { locale, setLocale } = useLocale();
+  const { setTelemetry, telemetry } = useTelemetry();
   const { setTheme, theme } = useTheme();
   const { t } = useTranslation();
 
@@ -121,6 +124,20 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 </SelectGroup>
               </SelectContent>
             </Select>
+          </div>
+          <div className="mt-5 flex items-start justify-between gap-4 border-t pt-5">
+            <div>
+              <h2 className="font-medium">{t('settings.telemetry')}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t('settings.telemetryDescription')}
+              </p>
+            </div>
+            <Checkbox
+              aria-label={t('settings.telemetryLabel')}
+              checked={telemetry === 'enabled'}
+              className="mt-0.5 shrink-0"
+              onCheckedChange={(checked) => setTelemetry(checked === true ? 'enabled' : 'disabled')}
+            />
           </div>
         </div>
         <DialogFooter className="shrink-0 border-t px-6 py-4">

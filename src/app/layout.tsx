@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import { AppLayout } from '@/components/AppLayout';
 import { LocaleProvider } from '@/contexts/LocaleProvider';
+import { TelemetryProvider } from '@/contexts/TelemetryProvider';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
 
 import './globals.css';
@@ -32,9 +33,11 @@ export default function RootLayout(props: RootLayoutProps) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <LocaleProvider>
-          <ThemeProvider>
-            <AppLayout>{children}</AppLayout>
-          </ThemeProvider>
+          <TelemetryProvider>
+            <ThemeProvider>
+              <AppLayout>{children}</AppLayout>
+            </ThemeProvider>
+          </TelemetryProvider>
         </LocaleProvider>
       </body>
     </html>
