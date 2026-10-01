@@ -18,12 +18,14 @@ import {
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 
-import { runAutomation } from './action';
+import { completeAutomationRun, runAutomation } from './action';
+import { AutomationExecutionError, runAutomationInBrowser } from './hooks/useAutomationRunner';
 import { type RunAutomationButtonProps } from './types';
 
 export function RunAutomationButton(props: RunAutomationButtonProps) {
-  const { automationId, automationName, inputs } = props;
+  const { automationId, automationName, expectsOutputs, inputs, libraries, script } = props;
   const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<Record<string, File>>({});
   const [isPending, setIsPending] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<Record<string, boolean | string>>({});
@@ -34,11 +36,17 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
     setValues(
       Object.fromEntries(inputs.map((input) => [input.name, input.type === 'boolean' ? false : '']))
     );
+    setFiles({});
     setIsOpen(true);
   }
 
   async function handleRun() {
-    const missingInput = inputs.find((input) => input.required && !values[input.name]);
+    const missingInput = inputs.find(
+      (input) =>
+        input.required &&
+        ((input.type === 'file' && !files[input.name]) ||
+          (input.type !== 'boolean' && input.type !== 'file' && values[input.name] === ''))
+    );
 
     if (missingInput) {
       setError(`Enter a value for ${missingInput.name}.`);
@@ -49,12 +57,11 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
     setIsPending(true);
 
     const normalizedInputs = Object.fromEntries(
-      inputs.map((input) => [
-        input.name,
-        input.type === 'number' && values[input.name] !== ''
-          ? Number(values[input.name])
-          : values[input.name],
-      ])
+      inputs.map((input) => {
+        const value = values[input.name] ?? '';
+
+        return [input.name, input.type === 'number' && value !== '' ? Number(value) : value];
+      })
     );
     const result = await runAutomation({ automationId, inputs: normalizedInputs });
 
@@ -64,9 +71,56 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
       return;
     }
 
-    setIsOpen(false);
-    router.refresh();
-    setIsPending(false);
+    if (!result.data) {
+      setError('Could not create the automation run.');
+      setIsPending(false);
+      return;
+    }
+
+    try {
+      const execution = await runAutomationInBrowser({
+        files,
+        inputs: normalizedInputs,
+        libraries,
+        expectsOutputs,
+        script,
+      });
+      const completion = await completeAutomationRun({
+        error: '',
+        logs: execution.logs,
+        outputs: execution.outputs,
+        runId: result.data.id,
+        status: 'succeeded',
+      });
+
+      if (completion.serverError) throw new Error(completion.serverError);
+
+      setIsOpen(false);
+      router.refresh();
+    } catch (executionError) {
+      const executionLogs =
+        executionError instanceof AutomationExecutionError ? executionError.logs : '';
+      const executionMessage =
+        executionError instanceof Error ? executionError.message : String(executionError);
+      const completion = await completeAutomationRun({
+        error: executionMessage,
+        logs: executionLogs,
+        outputs: {},
+        runId: result.data.id,
+        status: 'failed',
+      });
+
+      if (completion.serverError) {
+        setError(
+          `${executionMessage}\nCould not save the execution result: ${completion.serverError}`
+        );
+      } else {
+        setError(executionMessage);
+        router.refresh();
+      }
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -132,12 +186,17 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
                           className="sr-only"
                           id={inputId}
                           type="file"
-                          onChange={(event) =>
-                            setValues({
-                              ...values,
-                              [input.name]: event.target.files?.[0]?.name ?? '',
-                            })
-                          }
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            setFiles(
+                              file
+                                ? { ...files, [input.name]: file }
+                                : Object.fromEntries(
+                                    Object.entries(files).filter(([name]) => name !== input.name)
+                                  )
+                            );
+                            setValues({ ...values, [input.name]: file?.name ?? '' });
+                          }}
                         />
                       </div>
                       {input.description && (

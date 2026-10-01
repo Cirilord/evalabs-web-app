@@ -5,7 +5,25 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { actionClient } from '@/lib/safe-action';
 
-import { runAutomationSchema } from './schema/run-automation.schema';
+import { completeAutomationRunSchema, runAutomationSchema } from './schema/run-automation.schema';
+
+export const completeAutomationRun = actionClient
+  .inputSchema(completeAutomationRunSchema)
+  .action(async ({ parsedInput: { error, logs, outputs, runId, status } }) => {
+    const run = await prisma.run.update({
+      data: {
+        error,
+        finishedAt: new Date(),
+        logs,
+        outputsJson: outputs as never,
+        runnerVersion: 'Pyodide 314.0.7',
+        status,
+      },
+      where: { id: runId },
+    });
+
+    revalidatePath(`/automations/${run.automationId}`);
+  });
 
 export const runAutomation = actionClient
   .inputSchema(runAutomationSchema)
@@ -17,7 +35,7 @@ export const runAutomation = actionClient
         inputsJson: inputs as never,
         outputsJson: {},
         startedAt: now,
-        status: 'preparing',
+        status: 'running',
       },
     });
 

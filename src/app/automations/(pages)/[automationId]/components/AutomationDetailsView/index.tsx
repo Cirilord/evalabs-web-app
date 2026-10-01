@@ -9,7 +9,7 @@ import { EditScriptButton } from '../EditScriptButton';
 import { RunAutomationButton } from '../RunAutomationButton';
 import { RunDetailsButton } from '../RunDetailsButton';
 import { type AutomationDetailsViewProps } from './types';
-import { type AutomationRunInput } from '../RunAutomationButton/types';
+import { type AutomationLibrary, type AutomationRunInput } from '../RunAutomationButton/types';
 
 function getRunStatusLabel(status: AutomationDetailsViewProps['runs'][number]['status']) {
   const labels = {
@@ -50,7 +50,12 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
             <RunAutomationButton
               automationId={automation.id}
               automationName={automation.name}
+              expectsOutputs={
+                (automation.outputsJson as unknown as readonly AutomationRunInput[]).length > 0
+              }
               inputs={automation.inputsJson as unknown as readonly AutomationRunInput[]}
+              libraries={automation.librariesJson as unknown as readonly AutomationLibrary[]}
+              script={automation.script}
             />
             <DeleteAutomationButton automationId={automation.id} automationName={automation.name} />
           </div>
