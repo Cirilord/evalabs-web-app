@@ -1,16 +1,21 @@
 import { AppSidebar } from '@/components/AppSidebar';
+import { prisma } from '@/lib/prisma';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/ui/sidebar';
 import { TooltipProvider } from '@/ui/tooltip';
 
 import { type AppLayoutProps } from './types';
 
-export function AppLayout(props: AppLayoutProps) {
+export async function AppLayout(props: AppLayoutProps) {
   const { children } = props;
+  const automationItems = await prisma.automation.findMany({
+    orderBy: { updatedAt: 'desc' },
+    select: { id: true, name: true },
+  });
 
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <AppSidebar />
+        <AppSidebar automationItems={automationItems} />
         <SidebarInset>
           <header className="flex h-12 shrink-0 items-center border-b px-3">
             <SidebarTrigger />

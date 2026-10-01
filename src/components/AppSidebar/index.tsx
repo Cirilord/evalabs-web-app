@@ -1,8 +1,10 @@
+'use client';
+
 import { PlusIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
-import { prisma } from '@/lib/prisma';
 import {
   Sidebar,
   SidebarContent,
@@ -19,9 +21,13 @@ import {
 } from '@/ui/sidebar';
 
 import { SettingsDialog } from './components/SettingsDialog';
-import { type AppSidebarProps, type SidebarItem, type SidebarItemStatus } from './types';
+import { type AppSidebarProps, type SidebarItemStatus } from './types';
 
-const workflowItems: readonly SidebarItem[] = [
+const workflowItems: readonly Readonly<{
+  id: string;
+  name: string;
+  status: SidebarItemStatus;
+}>[] = [
   { id: 'customer-onboarding', name: 'Customer onboarding', status: 'completed' },
   { id: 'lead-qualification', name: 'Lead qualification', status: 'running' },
   { id: 'monthly-close', name: 'Monthly close', status: 'failed' },
@@ -40,12 +46,9 @@ function getStatusClassName(status: SidebarItemStatus) {
   }
 }
 
-export async function AppSidebar(props: AppSidebarProps) {
-  void props;
-  const automationItems = await prisma.automation.findMany({
-    orderBy: { updatedAt: 'desc' },
-    select: { id: true, name: true },
-  });
+export function AppSidebar(props: AppSidebarProps) {
+  const { automationItems } = props;
+  const { t } = useTranslation();
 
   return (
     <Sidebar collapsible="icon">
@@ -66,12 +69,11 @@ export async function AppSidebar(props: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Automations</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar.automations')}</SidebarGroupLabel>
           <SidebarGroupAction
-            aria-label="Create automation"
+            aria-label={t('sidebar.createAutomation')}
             render={<Link href="/automations/new" />}
           >
             <PlusIcon />
@@ -98,7 +100,7 @@ export async function AppSidebar(props: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>Workflows</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar.workflows')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {workflowItems.map((workflow) => (
@@ -118,7 +120,6 @@ export async function AppSidebar(props: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -126,7 +127,6 @@ export async function AppSidebar(props: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   );

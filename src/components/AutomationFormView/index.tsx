@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
@@ -45,10 +46,6 @@ import { type AutomationFormViewProps, type AutomationFormViewValues } from './t
 const DEFAULT_SCRIPT = `def main():\n  # Add your automation logic here.\n  pass\n`;
 const PORT_TYPES = ['text', 'file', 'number', 'boolean'] as const;
 const PORT_TYPE_ITEMS = PORT_TYPES.map((type) => ({ label: type, value: type }));
-const SCRIPT_SOURCE_ITEMS = [
-  { label: 'Write script', value: 'inline' },
-  { label: 'Choose Python file', value: 'file' },
-];
 const LIBRARIES = [
   'beautifulsoup4',
   'httpx',
@@ -63,6 +60,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
   const { automation } = props;
   const cancelHref = automation ? `/automations/${automation.id}` : '/';
   const isEditing = Boolean(automation);
+  const { t } = useTranslation();
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [libraryQuery, setLibraryQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,7 +117,26 @@ export function AutomationFormView(props: AutomationFormViewProps) {
   }
   function prompt() {
     const values = getValues();
-    return `Write a Python automation named "${values.name || 'Untitled automation'}".\n\nDescription: ${values.description || 'No description'}\n\nImplementation contract:\n- Respond with only complete Python code.\n- Define ${values.inputs.length ? 'main(inputs: dict)' : 'main()'}.\n- Use print() for execution logs when useful.\n- Never call input() or require interactive user input.\n\nInputs:\n${values.inputs.length ? values.inputs.map((input) => `- ${input.name || '<name>'} (${input.type}): ${input.description}`).join('\n') : '- No inputs'}\n\nLibraries:\n${values.libraries.length ? values.libraries.map((library) => `- ${library.name} (${library.version})`).join('\n') : '- No libraries'}\n\nOutputs:\n${values.outputs.length ? values.outputs.map((output) => `- ${output.name || '<name>'} (${output.type}): ${output.description}`).join('\n') : '- {}'}`;
+    return t('aiPrompt.template', {
+      description: values.description || t('aiPrompt.noDescription'),
+      inputContract: values.inputs.length
+        ? t('aiPrompt.mainWithInputs')
+        : t('aiPrompt.mainWithoutInputs'),
+      inputs: values.inputs.length
+        ? values.inputs
+            .map((input) => `- ${input.name || '<name>'} (${input.type}): ${input.description}`)
+            .join('\n')
+        : t('aiPrompt.noInputs'),
+      libraries: values.libraries.length
+        ? values.libraries.map((library) => `- ${library.name} (${library.version})`).join('\n')
+        : t('aiPrompt.noLibraries'),
+      name: values.name || t('aiPrompt.untitledAutomation'),
+      outputs: values.outputs.length
+        ? values.outputs
+            .map((output) => `- ${output.name || '<name>'} (${output.type}): ${output.description}`)
+            .join('\n')
+        : '{}',
+    });
   }
   async function submit(data: AutomationFormViewValues) {
     setIsSubmitting(true);
@@ -132,7 +149,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
         setError('root', { message: result.serverError });
         setIsSubmitting(false);
       } else if (result.validationErrors) {
-        setError('root', { message: 'Check the form fields and try again.' });
+        setError('root', { message: t('web.formError') });
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -148,6 +165,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
   }
   function portEditor(kind: 'inputs' | 'outputs', field: { id: string }, index: number) {
     const input = kind === 'inputs';
+    const fieldId = `${kind}-${index}`;
     const path = input ? (`inputs.${index}` as const) : (`outputs.${index}` as const);
     const removePort = () => {
       if (input) {
@@ -161,15 +179,17 @@ export function AutomationFormView(props: AutomationFormViewProps) {
         <div className="flex items-start justify-between gap-4">
           <div className="grid flex-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor={`${kind}-name-${field.id}`}>Name</Label>
+              <Label htmlFor={`${fieldId}-name`}>{t('create.name')}</Label>
               <Input
                 {...register(`${path}.name`)}
-                id={`${kind}-name-${field.id}`}
+                id={`${fieldId}-name`}
                 placeholder={input ? 'file_path' : 'report_file'}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${kind}-type-${field.id}`}>{input ? 'Input' : 'Output'} type</Label>
+              <Label htmlFor={`${fieldId}-type`}>
+                {input ? t('create.inputType') : t('web.outputType')}
+              </Label>
               <Controller
                 control={control}
                 name={`${path}.type`}
@@ -179,12 +199,14 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                     value={typeField.value}
                     onValueChange={typeField.onChange}
                   >
-                    <SelectTrigger id={`${kind}-type-${field.id}`} className="w-full">
+                    <SelectTrigger id={`${fieldId}-type`} className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectLabel>{input ? 'Input' : 'Output'} type</SelectLabel>
+                        <SelectLabel>
+                          {input ? t('create.inputType') : t('web.outputType')}
+                        </SelectLabel>
                         {PORT_TYPES.map((type) => (
                           <SelectItem key={type} value={type}>
                             {type}
@@ -197,18 +219,16 @@ export function AutomationFormView(props: AutomationFormViewProps) {
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor={`${kind}-description-${field.id}`}>Description</Label>
+              <Label htmlFor={`${fieldId}-description`}>{t('create.description')}</Label>
               <Input
                 {...register(`${path}.description`)}
-                id={`${kind}-description-${field.id}`}
-                placeholder={
-                  input ? 'Describe the value this automation needs' : 'Describe the returned value'
-                }
+                id={`${fieldId}-description`}
+                placeholder={input ? t('create.inputDescription') : t('web.outputDescription')}
               />
             </div>
           </div>
           <Button
-            aria-label={`Remove ${kind}`}
+            aria-label={t('common.remove')}
             size="icon"
             type="button"
             variant="ghost"
@@ -226,7 +246,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                 <Checkbox checked={requiredField.value} onCheckedChange={requiredField.onChange} />
               )}
             />
-            Required
+            {t('create.required')}
           </label>
         )}
       </div>
@@ -238,12 +258,10 @@ export function AutomationFormView(props: AutomationFormViewProps) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              {isEditing ? 'Edit automation' : 'Create automation'}
+              {isEditing ? t('create.editAutomation') : t('create.createAutomation')}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {isEditing
-                ? 'Update the automation name, configuration, and script.'
-                : 'Start with a name, a short description, and the script that runs the automation.'}
+              {isEditing ? t('create.editDescription') : t('create.startDescription')}
             </p>
           </div>
           <Button
@@ -255,42 +273,39 @@ export function AutomationFormView(props: AutomationFormViewProps) {
             }}
           >
             <SparklesIcon data-icon="inline-start" />
-            Generate AI prompt
+            {t('web.generatePrompt')}
           </Button>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(submit)}>
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t('create.name')}</Label>
             <Input
               {...register('name')}
               autoFocus
               id="name"
-              placeholder="Merge monthly spreadsheets"
+              placeholder={t('create.namePlaceholder')}
             />
             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('create.description')}</Label>
             <Textarea
               {...register('description')}
               id="description"
-              placeholder="Describe what this automation does"
+              placeholder={t('create.descriptionPlaceholder')}
               rows={5}
             />
           </div>
           <section className="flex flex-col gap-2">
             <div>
-              <h2 className="text-base font-medium">Libraries</h2>
-              <p className="text-sm text-muted-foreground">
-                Choose the PyPI packages this automation needs. Each package uses the latest release
-                by default.
-              </p>
+              <h2 className="text-base font-medium">{t('create.libraries')}</h2>
+              <p className="text-sm text-muted-foreground">{t('create.librariesDescription')}</p>
             </div>
             <div className="rounded-md border p-2">
               <div className="flex gap-2">
                 <Input
                   value={libraryQuery}
-                  placeholder="Search or add a PyPI package..."
+                  placeholder={t('web.librarySearch')}
                   onChange={(event) => setLibraryQuery(event.target.value)}
                 />
                 <Button
@@ -300,7 +315,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                   onClick={() => addLibrary(query)}
                 >
                   <PlusIcon data-icon="inline-start" />
-                  Add
+                  {t('common.add')}
                 </Button>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -340,7 +355,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                   }
                 />
                 <Button
-                  aria-label={`Remove ${library.name}`}
+                  aria-label={t('common.remove')}
                   size="icon-xs"
                   type="button"
                   variant="ghost"
@@ -359,10 +374,8 @@ export function AutomationFormView(props: AutomationFormViewProps) {
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-base font-medium">Inputs</h2>
-                <p className="text-sm text-muted-foreground">
-                  Define the values this automation receives when it runs.
-                </p>
+                <h2 className="text-base font-medium">{t('create.inputs')}</h2>
+                <p className="text-sm text-muted-foreground">{t('create.inputsDescription')}</p>
               </div>
               <Button
                 type="button"
@@ -373,24 +386,22 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                 }}
               >
                 <PlusIcon data-icon="inline-start" />
-                Add input
+                {t('create.addInput')}
               </Button>
             </div>
             {fields.length ? (
               fields.map((field, index) => portEditor('inputs', field, index))
             ) : (
               <p className="rounded-md border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                This automation does not require any inputs yet.
+                {t('create.noInputs')}
               </p>
             )}
           </section>
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-base font-medium">Outputs</h2>
-                <p className="text-sm text-muted-foreground">
-                  Declare the values returned by main as a dictionary.
-                </p>
+                <h2 className="text-base font-medium">{t('web.outputs')}</h2>
+                <p className="text-sm text-muted-foreground">{t('web.outputsDescription')}</p>
               </div>
               <Button
                 type="button"
@@ -398,25 +409,28 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                 onClick={() => appendOutput({ description: '', name: '', type: 'text' })}
               >
                 <PlusIcon data-icon="inline-start" />
-                Add output
+                {t('workflow.addOutput')}
               </Button>
             </div>
             {outputFields.length ? (
               outputFields.map((field, index) => portEditor('outputs', field, index))
             ) : (
               <p className="rounded-md border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                This automation does not return outputs yet.
+                {t('web.noOutputs')}
               </p>
             )}
           </section>
           <div className="space-y-2">
-            <Label htmlFor="script-mode">Script source</Label>
+            <Label htmlFor="script-mode">{t('create.scriptSource')}</Label>
             <Controller
               control={control}
               name="scriptMode"
               render={({ field }) => (
                 <Select
-                  items={SCRIPT_SOURCE_ITEMS}
+                  items={[
+                    { label: t('create.scriptSourceInline'), value: 'inline' },
+                    { label: t('create.scriptSourceFile'), value: 'file' },
+                  ]}
                   value={field.value}
                   onValueChange={field.onChange}
                 >
@@ -425,9 +439,9 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>Script source</SelectLabel>
-                      <SelectItem value="inline">Write script</SelectItem>
-                      <SelectItem value="file">Choose Python file</SelectItem>
+                      <SelectLabel>{t('create.scriptSource')}</SelectLabel>
+                      <SelectItem value="inline">{t('create.scriptSourceInline')}</SelectItem>
+                      <SelectItem value="file">{t('create.scriptSourceFile')}</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -436,11 +450,8 @@ export function AutomationFormView(props: AutomationFormViewProps) {
           </div>
           {scriptMode === 'inline' ? (
             <div className="space-y-2">
-              <Label htmlFor="script">Script</Label>
-              <p className="text-sm text-muted-foreground">
-                Define main() when there are no inputs, or main(inputs) otherwise. Use print for
-                logs; input() is not supported.
-              </p>
+              <Label htmlFor="script">{t('create.script')}</Label>
+              <p className="text-sm text-muted-foreground">{t('create.scriptHint')}</p>
               <Textarea
                 {...register('script')}
                 className="min-h-80 font-mono text-xs"
@@ -449,12 +460,12 @@ export function AutomationFormView(props: AutomationFormViewProps) {
             </div>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="script-file">Choose Python file</Label>
+              <Label htmlFor="script-file">{t('create.choosePythonFile')}</Label>
               <div className="flex gap-2">
                 <Input
                   readOnly
                   value={getValues('scriptPath') ?? ''}
-                  placeholder="No Python file selected"
+                  placeholder={t('create.noPythonFile')}
                 />
                 <Button
                   nativeButton={false}
@@ -463,7 +474,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                   variant="outline"
                 >
                   <FileIcon data-icon="inline-start" />
-                  File
+                  {t('common.file')}
                 </Button>
                 <Input
                   accept=".py"
@@ -483,16 +494,16 @@ export function AutomationFormView(props: AutomationFormViewProps) {
               type="button"
               variant="outline"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button disabled={isSubmitting} type="submit">
               {isSubmitting
                 ? isEditing
-                  ? 'Saving...'
-                  : 'Creating...'
+                  ? t('create.saving')
+                  : t('create.creating')
                 : isEditing
-                  ? 'Save automation'
-                  : 'Create automation'}
+                  ? t('common.saveChanges')
+                  : t('create.createAutomation')}
             </Button>
           </div>
         </form>
@@ -500,10 +511,8 @@ export function AutomationFormView(props: AutomationFormViewProps) {
       <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
         <DialogContent className="flex max-h-[calc(100svh-2rem)] max-w-3xl flex-col gap-0 p-0">
           <DialogHeader className="border-b px-6 py-5">
-            <DialogTitle>Generate script with AI</DialogTitle>
-            <DialogDescription>
-              Copy this prompt into your preferred AI assistant to generate the Python script.
-            </DialogDescription>
+            <DialogTitle>{t('web.generatePromptTitle')}</DialogTitle>
+            <DialogDescription>{t('web.generatePromptDescription')}</DialogDescription>
           </DialogHeader>
           <div className="p-6">
             <Textarea
@@ -514,10 +523,10 @@ export function AutomationFormView(props: AutomationFormViewProps) {
           </div>
           <DialogFooter className="items-center justify-between border-t px-6 py-4">
             <p className="text-sm text-destructive">
-              {copyState === 'error' && 'Could not copy the prompt. Select and copy it manually.'}
+              {copyState === 'error' && t('web.copyError')}
             </p>
             <div className="flex gap-3">
-              <DialogClose>Close</DialogClose>
+              <DialogClose>{t('common.close')}</DialogClose>
               <Button
                 type="button"
                 onClick={async () => {
@@ -534,7 +543,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                 ) : (
                   <CopyIcon data-icon="inline-start" />
                 )}
-                {copyState === 'copied' ? 'Copied' : 'Copy prompt'}
+                {copyState === 'copied' ? t('web.copied') : t('web.copyPrompt')}
               </Button>
             </div>
           </DialogFooter>

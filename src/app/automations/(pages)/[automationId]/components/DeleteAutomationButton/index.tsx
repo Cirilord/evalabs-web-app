@@ -3,6 +3,7 @@
 import { Trash2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 import {
@@ -21,6 +22,7 @@ import { type DeleteAutomationButtonProps } from './types';
 
 export function DeleteAutomationButton(props: DeleteAutomationButtonProps) {
   const { automationId, automationName } = props;
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -47,21 +49,20 @@ export function DeleteAutomationButton(props: DeleteAutomationButtonProps) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={<Button variant="destructive" />}>
         <Trash2Icon data-icon="inline-start" />
-        Delete automation
+        {t('runs.deleteAutomation')}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete automation {automationName}?</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. The automation and its run history will be permanently
-            deleted.
-          </DialogDescription>
+          <DialogTitle>
+            {t('runs.deleteAutomation')} {automationName}?
+          </DialogTitle>
+          <DialogDescription>{t('runs.deleteDescription')}</DialogDescription>
         </DialogHeader>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <DialogFooter>
-          <DialogClose disabled={isPending}>Cancel</DialogClose>
+          <DialogClose disabled={isPending}>{t('common.cancel')}</DialogClose>
           <Button disabled={isPending} type="button" variant="destructive" onClick={handleDelete}>
-            {isPending ? 'Deleting...' : 'Delete automation'}
+            {isPending ? t('runs.deleting') : t('runs.deleteAutomation')}
           </Button>
         </DialogFooter>
       </DialogContent>

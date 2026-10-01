@@ -2,6 +2,7 @@
 
 import { InfoIcon } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 import {
@@ -17,9 +18,9 @@ import {
 
 import { type RunDetailsButtonProps } from './types';
 
-function getDuration(startedAt: Date, finishedAt: Date | null) {
+function getDuration(startedAt: Date, finishedAt: Date | null, inProgress: string) {
   if (!finishedAt) {
-    return 'In progress';
+    return inProgress;
   }
 
   return `${((finishedAt.getTime() - startedAt.getTime()) / 1_000).toFixed(2)}s`;
@@ -27,55 +28,56 @@ function getDuration(startedAt: Date, finishedAt: Date | null) {
 
 export function RunDetailsButton(props: RunDetailsButtonProps) {
   const { run } = props;
+  const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={<Button size="sm" type="button" variant="outline" />}>
         <InfoIcon data-icon="inline-start" />
-        Run details
+        {t('runs.details')}
       </DialogTrigger>
       <DialogContent className="flex max-h-[calc(100svh-2rem)] max-w-3xl flex-col gap-0 p-0">
         <DialogHeader className="shrink-0 border-b px-6 py-5">
-          <DialogTitle>Run details</DialogTitle>
-          <DialogDescription>Execution information, inputs, and logs.</DialogDescription>
+          <DialogTitle>{t('runs.details')}</DialogTitle>
+          <DialogDescription>{t('runs.detailsDescription')}</DialogDescription>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto px-6 py-5">
           <dl className="grid gap-4 text-sm sm:grid-cols-4">
             <div className="flex flex-col gap-1">
-              <dt className="text-muted-foreground">Status</dt>
+              <dt className="text-muted-foreground">{t('web.status')}</dt>
               <dd className="font-medium">
                 {run.status.charAt(0).toUpperCase() + run.status.slice(1)}
               </dd>
             </div>
             <div className="flex flex-col gap-1">
-              <dt className="text-muted-foreground">Started at</dt>
-              <dd>{run.startedAt.toLocaleString('en-US')}</dd>
+              <dt className="text-muted-foreground">{t('web.startedAt')}</dt>
+              <dd>{run.startedAt.toLocaleString(i18n.language)}</dd>
             </div>
             <div className="flex flex-col gap-1">
-              <dt className="text-muted-foreground">Duration</dt>
-              <dd>{getDuration(run.startedAt, run.finishedAt)}</dd>
+              <dt className="text-muted-foreground">{t('web.duration')}</dt>
+              <dd>{getDuration(run.startedAt, run.finishedAt, t('web.inProgress'))}</dd>
             </div>
             <div className="flex flex-col gap-1">
-              <dt className="text-muted-foreground">Runner</dt>
-              <dd>{run.runnerVersion || 'Unknown'}</dd>
+              <dt className="text-muted-foreground">{t('runs.runner')}</dt>
+              <dd>{run.runnerVersion || t('web.unknown')}</dd>
             </div>
           </dl>
           <section className="mt-6">
-            <h2 className="text-sm font-medium">Inputs</h2>
+            <h2 className="text-sm font-medium">{t('runs.inputs')}</h2>
             <pre className="mt-2 overflow-x-auto rounded-md bg-muted px-3 py-2 text-xs text-foreground">
               {JSON.stringify(run.inputsJson, null, 2)}
             </pre>
           </section>
           <section className="mt-6">
-            <h2 className="text-sm font-medium">Logs</h2>
+            <h2 className="text-sm font-medium">{t('runs.logs')}</h2>
             <pre className="mt-2 min-h-10 overflow-x-auto rounded-md bg-muted px-3 py-2 text-xs text-foreground">
-              {run.logs || 'No logs available.'}
+              {run.logs || t('runs.noLogs')}
             </pre>
           </section>
           {run.error && (
             <section className="mt-6">
-              <h2 className="text-sm font-medium text-destructive">Error</h2>
+              <h2 className="text-sm font-medium text-destructive">{t('runs.error')}</h2>
               <pre className="mt-2 overflow-x-auto rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
                 {run.error}
               </pre>
@@ -83,7 +85,7 @@ export function RunDetailsButton(props: RunDetailsButtonProps) {
           )}
         </div>
         <DialogFooter className="shrink-0 border-t px-6 py-4">
-          <DialogClose>Close</DialogClose>
+          <DialogClose>{t('common.close')}</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

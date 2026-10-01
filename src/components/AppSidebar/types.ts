@@ -1,9 +1,10 @@
-export type AppSidebarProps = Readonly<Record<string, never>>;
-
-export type SidebarItemStatus = 'completed' | 'failed' | 'queued' | 'running';
-
-export type SidebarItem = Readonly<{
+export type AutomationSidebarItem = Readonly<{
   id: string;
   name: string;
-  status: SidebarItemStatus;
 }>;
+
+export type AppSidebarProps = Readonly<{
+  automationItems: readonly AutomationSidebarItem[];
+}>;
+
+export type SidebarItemStatus = 'completed' | 'failed' | 'queued' | 'running';

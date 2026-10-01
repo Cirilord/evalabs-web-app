@@ -1,5 +1,8 @@
+'use client';
+
 import { LoaderCircleIcon, PencilIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 
@@ -7,23 +10,19 @@ import { CloneAutomationButton } from '../CloneAutomationButton';
 import { DeleteAutomationButton } from '../DeleteAutomationButton';
 import { EditScriptButton } from '../EditScriptButton';
 import { RunAutomationButton } from '../RunAutomationButton';
+import { type AutomationLibrary, type AutomationRunInput } from '../RunAutomationButton/types';
 import { RunDetailsButton } from '../RunDetailsButton';
 import { type AutomationDetailsViewProps } from './types';
-import { type AutomationLibrary, type AutomationRunInput } from '../RunAutomationButton/types';
-
-function getRunStatusLabel(status: AutomationDetailsViewProps['runs'][number]['status']) {
-  const labels = {
-    failed: 'Failed',
-    preparing: 'Installing dependencies',
-    running: 'Running',
-    succeeded: 'Succeeded',
-  };
-
-  return labels[status];
-}
 
 export function AutomationDetailsView(props: AutomationDetailsViewProps) {
   const { automation, runs } = props;
+  const { i18n, t } = useTranslation();
+  const statusLabels = {
+    failed: t('runs.statusFailed'),
+    preparing: t('runs.statusPreparing'),
+    running: t('runs.statusRunning'),
+    succeeded: t('runs.statusSucceeded'),
+  };
 
   return (
     <main className="flex-1 p-6 sm:p-10">
@@ -44,7 +43,7 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
               variant="outline"
             >
               <PencilIcon data-icon="inline-start" />
-              Edit automation
+              {t('create.editAutomation')}
             </Button>
             <CloneAutomationButton automationId={automation.id} />
             <RunAutomationButton
@@ -64,19 +63,15 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
         <section aria-labelledby="runs-heading" className="flex flex-col gap-4">
           <div>
             <h2 className="text-lg font-semibold" id="runs-heading">
-              Runs
+              {t('runs.runs')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Execution information, inputs, and logs.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('runs.detailsDescription')}</p>
           </div>
 
           {runs.length === 0 ? (
             <div className="rounded-lg border bg-background px-5 py-10 text-center">
-              <p className="font-medium">No runs yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Run this automation to create its first execution.
-              </p>
+              <p className="font-medium">{t('runs.noRuns')}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t('runs.noRunsDescription')}</p>
             </div>
           ) : (
             <div className="overflow-hidden rounded-lg border bg-background">
@@ -84,9 +79,9 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
                 <article className="border-b px-5 py-4 last:border-b-0" key={run.id}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium">{getRunStatusLabel(run.status)}</span>
+                      <span className="text-sm font-medium">{statusLabels[run.status]}</span>
                       <span className="text-sm text-muted-foreground">
-                        {run.startedAt.toLocaleString('en-US')}
+                        {run.startedAt.toLocaleString(i18n.language)}
                       </span>
                       {run.runnerVersion && (
                         <span className="text-sm text-muted-foreground">{run.runnerVersion}</span>
@@ -95,7 +90,9 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
                     <div className="flex items-center gap-3">
                       {run.finishedAt && (
                         <span className="text-sm text-muted-foreground">
-                          Finished {run.finishedAt.toLocaleTimeString('en-US')}
+                          {t('web.finishedAt', {
+                            time: run.finishedAt.toLocaleTimeString(i18n.language),
+                          })}
                         </span>
                       )}
                       {(run.status === 'preparing' || run.status === 'running') && (
