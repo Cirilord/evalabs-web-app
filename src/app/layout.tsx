@@ -2,6 +2,7 @@ import { type Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
 import { AppLayout } from '@/components/AppLayout';
+import { OnboardingGate } from '@/components/OnboardingGate';
 import { LocaleProvider } from '@/contexts/LocaleProvider';
 import { ReactQueryProvider } from '@/contexts/ReactQueryProvider';
 import { RunnerProvider } from '@/contexts/RunnerProvider';
@@ -39,7 +40,9 @@ export default function RootLayout(props: RootLayoutProps) {
             <TelemetryProvider>
               <RunnerProvider>
                 <ThemeProvider>
-                  <AppLayout>{children}</AppLayout>
+                  <OnboardingGate>
+                    <AppLayout>{children}</AppLayout>
+                  </OnboardingGate>
                 </ThemeProvider>
               </RunnerProvider>
             </TelemetryProvider>
