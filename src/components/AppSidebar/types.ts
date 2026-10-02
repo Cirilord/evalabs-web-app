@@ -7,4 +7,4 @@ export type AppSidebarProps = Readonly<{
   automationItems: readonly AutomationSidebarItem[];
 }>;
 
-export type SidebarItemStatus = 'completed' | 'failed' | 'queued' | 'running';
+export type SidebarItemStatus = 'failed' | 'preparing' | 'running' | 'skipped' | 'succeeded';

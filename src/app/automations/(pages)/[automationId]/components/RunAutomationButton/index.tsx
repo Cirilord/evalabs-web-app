@@ -1,11 +1,13 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { FileIcon, LoaderCircleIcon, PlayIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useRunner } from '@/contexts/RunnerProvider';
+import { queryKeys } from '@/lib/query-keys';
 import { getPyodideRunnerLabel } from '@/lib/runner';
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
@@ -35,6 +37,7 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
   const [isPending, setIsPending] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<Record<string, boolean | string>>({});
+  const queryClient = useQueryClient();
   const router = useRouter();
 
   function openDialog() {
@@ -83,6 +86,9 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
       return;
     }
 
+    await queryClient.invalidateQueries({ queryKey: queryKeys.automationStatuses });
+    setIsOpen(false);
+
     try {
       const execution = await runAutomationInBrowser({
         files,
@@ -103,7 +109,6 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
 
       if (completion.serverError) throw new Error(completion.serverError);
 
-      setIsOpen(false);
       router.refresh();
     } catch (executionError) {
       const executionLogs =
@@ -128,6 +133,7 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         router.refresh();
       }
     } finally {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.automationStatuses });
       setIsPending(false);
     }
   }

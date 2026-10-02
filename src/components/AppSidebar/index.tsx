@@ -21,6 +21,7 @@ import {
 } from '@/ui/sidebar';
 
 import { SettingsDialog } from './components/SettingsDialog';
+import { useAutomationStatuses } from './hooks/useAutomationStatuses';
 import { type AppSidebarProps, type SidebarItemStatus } from './types';
 
 const workflowItems: readonly Readonly<{
@@ -28,27 +29,44 @@ const workflowItems: readonly Readonly<{
   name: string;
   status: SidebarItemStatus;
 }>[] = [
-  { id: 'customer-onboarding', name: 'Customer onboarding', status: 'completed' },
+  { id: 'customer-onboarding', name: 'Customer onboarding', status: 'succeeded' },
   { id: 'lead-qualification', name: 'Lead qualification', status: 'running' },
   { id: 'monthly-close', name: 'Monthly close', status: 'failed' },
 ];
 
-function getStatusClassName(status: SidebarItemStatus) {
+function getRunIndicator(status: SidebarItemStatus | undefined, t: (key: string) => string) {
   switch (status) {
-    case 'completed':
-      return 'fill-current text-success';
-    case 'failed':
-      return 'fill-current text-destructive';
+    case 'preparing':
+      return {
+        className: 'animate-pulse fill-current text-warning',
+        label: t('workflow.installing'),
+      };
     case 'running':
-      return 'animate-pulse fill-current text-primary';
+      return {
+        className: 'animate-pulse fill-current text-sidebar-primary',
+        label: t('sidebar.running'),
+      };
+    case 'succeeded':
+      return { className: 'fill-current text-success', label: t('workflow.succeeded') };
+    case 'failed':
+      return { className: 'fill-current text-destructive', label: t('sidebar.failed') };
+    case 'skipped':
+      return { className: 'fill-current text-muted-foreground', label: t('workflow.skipped') };
     default:
-      return 'animate-pulse fill-current text-warning';
+      return { className: 'text-muted-foreground', label: t('sidebar.noRuns') };
   }
 }
 
 export function AppSidebar(props: AppSidebarProps) {
   const { automationItems } = props;
   const { t } = useTranslation();
+  const { data: automationStatuses = [] } = useAutomationStatuses();
+  const statusByAutomation = new Map(
+    automationStatuses.map((automationStatus) => [
+      automationStatus.automationId,
+      automationStatus.status,
+    ])
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -80,22 +98,29 @@ export function AppSidebar(props: AppSidebarProps) {
           </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
-              {automationItems.map((automation) => (
-                <SidebarMenuItem key={automation.id}>
-                  <SidebarMenuButton
-                    render={<Link href={`/automations/${automation.id}`} />}
-                    tooltip={automation.name}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-current ${getStatusClassName('queued')}`}
+              {automationItems.map((automation) => {
+                const indicator = getRunIndicator(
+                  statusByAutomation.get(automation.id) ?? undefined,
+                  t
+                );
+
+                return (
+                  <SidebarMenuItem key={automation.id}>
+                    <SidebarMenuButton
+                      render={<Link href={`/automations/${automation.id}`} />}
+                      tooltip={`${automation.name}: ${indicator.label}`}
                     >
-                      <span className="size-1.5 rounded-full bg-current" />
-                    </span>
-                    <span>{automation.name}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      <span
+                        aria-hidden="true"
+                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-current ${indicator.className}`}
+                      >
+                        <span className="size-1.5 rounded-full bg-current" />
+                      </span>
+                      <span>{automation.name}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -103,19 +128,26 @@ export function AppSidebar(props: AppSidebarProps) {
           <SidebarGroupLabel>{t('sidebar.workflows')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {workflowItems.map((workflow) => (
-                <SidebarMenuItem key={workflow.id}>
-                  <SidebarMenuButton tooltip={workflow.name} type="button">
-                    <span
-                      aria-hidden="true"
-                      className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-current ${getStatusClassName(workflow.status)}`}
+              {workflowItems.map((workflow) => {
+                const indicator = getRunIndicator(workflow.status, t);
+
+                return (
+                  <SidebarMenuItem key={workflow.id}>
+                    <SidebarMenuButton
+                      tooltip={`${workflow.name}: ${indicator.label}`}
+                      type="button"
                     >
-                      <span className="size-1.5 rounded-full bg-current" />
-                    </span>
-                    <span>{workflow.name}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      <span
+                        aria-hidden="true"
+                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-current ${indicator.className}`}
+                      >
+                        <span className="size-1.5 rounded-full bg-current" />
+                      </span>
+                      <span>{workflow.name}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

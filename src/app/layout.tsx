@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import { AppLayout } from '@/components/AppLayout';
 import { LocaleProvider } from '@/contexts/LocaleProvider';
+import { ReactQueryProvider } from '@/contexts/ReactQueryProvider';
 import { RunnerProvider } from '@/contexts/RunnerProvider';
 import { TelemetryProvider } from '@/contexts/TelemetryProvider';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
@@ -34,13 +35,15 @@ export default function RootLayout(props: RootLayoutProps) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <LocaleProvider>
-          <TelemetryProvider>
-            <RunnerProvider>
-              <ThemeProvider>
-                <AppLayout>{children}</AppLayout>
-              </ThemeProvider>
-            </RunnerProvider>
-          </TelemetryProvider>
+          <ReactQueryProvider>
+            <TelemetryProvider>
+              <RunnerProvider>
+                <ThemeProvider>
+                  <AppLayout>{children}</AppLayout>
+                </ThemeProvider>
+              </RunnerProvider>
+            </TelemetryProvider>
+          </ReactQueryProvider>
         </LocaleProvider>
       </body>
     </html>
