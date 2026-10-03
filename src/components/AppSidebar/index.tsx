@@ -22,17 +22,8 @@ import {
 
 import { SettingsDialog } from './components/SettingsDialog';
 import { useAutomationStatuses } from './hooks/useAutomationStatuses';
+import { useWorkflowStatuses } from './hooks/useWorkflowStatuses';
 import { type AppSidebarProps, type SidebarItemStatus } from './types';
-
-const workflowItems: readonly Readonly<{
-  id: string;
-  name: string;
-  status: SidebarItemStatus;
-}>[] = [
-  { id: 'customer-onboarding', name: 'Customer onboarding', status: 'succeeded' },
-  { id: 'lead-qualification', name: 'Lead qualification', status: 'running' },
-  { id: 'monthly-close', name: 'Monthly close', status: 'failed' },
-];
 
 function getRunIndicator(status: SidebarItemStatus | undefined, t: (key: string) => string) {
   switch (status) {
@@ -58,14 +49,18 @@ function getRunIndicator(status: SidebarItemStatus | undefined, t: (key: string)
 }
 
 export function AppSidebar(props: AppSidebarProps) {
-  const { automationItems } = props;
+  const { automationItems, workflowItems } = props;
   const { t } = useTranslation();
   const { data: automationStatuses = [] } = useAutomationStatuses();
+  const { data: workflowStatuses = [] } = useWorkflowStatuses();
   const statusByAutomation = new Map(
     automationStatuses.map((automationStatus) => [
       automationStatus.automationId,
       automationStatus.status,
     ])
+  );
+  const statusByWorkflow = new Map(
+    workflowStatuses.map((workflowStatus) => [workflowStatus.workflowId, workflowStatus.status])
   );
 
   return (
@@ -126,16 +121,25 @@ export function AppSidebar(props: AppSidebarProps) {
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel>{t('sidebar.workflows')}</SidebarGroupLabel>
+          <SidebarGroupAction
+            aria-label={t('workflow.create')}
+            render={<Link href="/workflows/new" />}
+          >
+            <PlusIcon />
+          </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
               {workflowItems.map((workflow) => {
-                const indicator = getRunIndicator(workflow.status, t);
+                const indicator = getRunIndicator(
+                  statusByWorkflow.get(workflow.id) ?? undefined,
+                  t
+                );
 
                 return (
                   <SidebarMenuItem key={workflow.id}>
                     <SidebarMenuButton
+                      render={<Link href={`/workflows/${workflow.id}`} />}
                       tooltip={`${workflow.name}: ${indicator.label}`}
-                      type="button"
                     >
                       <span
                         aria-hidden="true"
@@ -149,6 +153,9 @@ export function AppSidebar(props: AppSidebarProps) {
                 );
               })}
             </SidebarMenu>
+            {workflowItems.length === 0 && (
+              <p className="px-2 py-4 text-sm text-muted-foreground">{t('workflow.none')}</p>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

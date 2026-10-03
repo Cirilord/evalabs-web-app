@@ -7,15 +7,21 @@ import { type AppLayoutProps } from './types';
 
 export async function AppLayout(props: AppLayoutProps) {
   const { children } = props;
-  const automationItems = await prisma.automation.findMany({
-    orderBy: { updatedAt: 'desc' },
-    select: { id: true, name: true },
-  });
+  const [automationItems, workflowItems] = await Promise.all([
+    prisma.automation.findMany({
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, name: true },
+    }),
+    prisma.workflow.findMany({
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <AppSidebar automationItems={automationItems} />
+        <AppSidebar automationItems={automationItems} workflowItems={workflowItems} />
         <SidebarInset>
           <header className="flex h-12 shrink-0 items-center border-b px-3">
             <SidebarTrigger />
