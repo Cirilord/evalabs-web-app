@@ -22,8 +22,8 @@ export async function AppLayout(props: AppLayoutProps) {
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar automationItems={automationItems} workflowItems={workflowItems} />
-        <SidebarInset>
-          <header className="flex h-12 shrink-0 items-center border-b px-3">
+        <SidebarInset className="h-svh min-h-0 overflow-hidden">
+          <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center border-b bg-background px-3">
             <SidebarTrigger />
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
