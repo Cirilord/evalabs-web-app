@@ -1,6 +1,12 @@
-generator client {
+generator browserClient {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../src/generated/prisma-browser"
+  runtime  = "workerd"
+}
+
+generator serverClient {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma-server"
   runtime  = "nodejs"
 }
 

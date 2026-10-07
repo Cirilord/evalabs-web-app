@@ -102,11 +102,31 @@ Treat `src` as the application's global scope.
 - `src/contexts`: React Context providers shared by more than one route or domain.
 - `src/hooks`: hooks shared by the application.
 - `src/lib`: integrations, clients, configuration, and reusable infrastructure code.
+- `src/services`: application services organized by domain. When a service must run in both environments, place its client and server implementations in separate directories inside that domain.
 - `src/helpers`: helper functions containing presentation or domain rules.
 - `src/ui`: shadcn UI components shared by the application.
 - `src/utils`: small, pure, generic utility functions.
 
 Create these directories only when they contain code. Do not add empty directories.
+
+Example service structure:
+
+```text
+src/services/
+└── automations/
+    ├── client/
+    │   └── create-automation.ts
+    ├── server/
+    │   └── create-automation.ts
+    ├── types.ts
+    └── utils.ts
+```
+
+Every `client/` service module must declare `import 'client-only';` and may import `prisma.client`. Every `server/` service module must declare `import 'server-only';` and may import `prisma.server`. Create the matching server service whenever adding a client service, even when it is not used yet. Keep types directly in the domain directory. Create `shared/` only when the domain has multiple runtime-independent modules, such as mappers or business rules.
+
+Every service function must declare explicit input and return types. Assign the result of a persistence operation to a local variable before returning it.
+
+Place pure utility functions shared by a service domain's client and server implementations in that domain's `utils.ts`. Do not put domain-specific utilities in `src/utils`.
 
 ## File placement
 

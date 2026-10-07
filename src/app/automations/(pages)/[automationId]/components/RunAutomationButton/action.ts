@@ -1,46 +1,29 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
-import { prisma } from '@/lib/prisma';
-import { actionClient } from '@/lib/safe-action';
-
-import { completeAutomationRunSchema, runAutomationSchema } from './schema/run-automation.schema';
-
-export const completeAutomationRun = actionClient
-  .inputSchema(completeAutomationRunSchema)
-  .action(async ({ parsedInput: { error, logs, outputs, runId, runnerVersion, status } }) => {
-    const run = await prisma.run.update({
-      data: {
-        error,
-        finishedAt: new Date(),
-        logs,
-        outputsJson: outputs as never,
-        runnerVersion,
-        status,
-      },
-      where: { id: runId },
-    });
-
-    revalidatePath(`/automations/${run.automationId}`);
-  });
-
-export const runAutomation = actionClient
-  .inputSchema(runAutomationSchema)
-  .action(async ({ parsedInput: { automationId, inputs, runnerVersion } }) => {
-    const now = new Date();
-    const run = await prisma.run.create({
-      data: {
-        automationId,
-        inputsJson: inputs as never,
-        outputsJson: {},
-        runnerVersion,
-        startedAt: now,
-        status: 'running',
-      },
-    });
-
-    revalidatePath(`/automations/${automationId}`);
-
-    return { id: run.id };
-  });
+/*
+ * Temporarily disabled while local-only persistence is implemented.
+ *
+ * import { revalidatePath } from 'next/cache';
+ *
+ * import { actionClient } from '@/lib/safe-action';
+ * import { completeAutomationRun } from '@/services/automations/server/complete-automation-run';
+ * import { createAutomationRun } from '@/services/automations/server/create-automation-run';
+ *
+ * import { completeAutomationRunSchema, runAutomationSchema } from './schema/run-automation.schema';
+ *
+ * export const completeAutomationRunAction = actionClient
+ *   .inputSchema(completeAutomationRunSchema)
+ *   .action(async ({ parsedInput }) => {
+ *     await completeAutomationRun(parsedInput);
+ *   });
+ *
+ * export const createAutomationRunAction = actionClient
+ *   .inputSchema(runAutomationSchema)
+ *   .action(async ({ parsedInput }) => {
+ *     const run = await createAutomationRun(parsedInput);
+ *
+ *     revalidatePath(`/automations/${parsedInput.automationId}`);
+ *
+ *     return run;
+ *   });
+ */

@@ -1,10 +1,12 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { FilePenLineIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { queryKeys } from '@/lib/query-keys';
+import { updateAutomationScript } from '@/services/automations/client/update-automation-script';
 import { Button } from '@/ui/button';
 import {
   Dialog,
@@ -17,7 +19,7 @@ import {
 } from '@/ui/dialog';
 import { Textarea } from '@/ui/textarea';
 
-import { updateAutomationScript } from './action';
+import { updateAutomationScriptSchema } from './schema/update-automation-script.schema';
 import { type EditScriptButtonProps } from './types';
 
 export function EditScriptButton(props: EditScriptButtonProps) {
@@ -27,28 +29,32 @@ export function EditScriptButton(props: EditScriptButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [script, setScript] = useState(initialScript);
-  const router = useRouter();
+  const queryClient = useQueryClient();
 
   async function handleSave() {
     setError(null);
     setIsPending(true);
 
-    const result = await updateAutomationScript({ automationId, script });
+    const result = updateAutomationScriptSchema.safeParse({ automationId, script });
 
-    if (result.serverError) {
-      setError(result.serverError);
-      setIsPending(false);
-      return;
-    }
-
-    if (result.validationErrors) {
+    if (!result.success) {
       setError(t('web.validScriptRequired'));
       setIsPending(false);
       return;
     }
 
-    setIsOpen(false);
-    router.refresh();
+    try {
+      await updateAutomationScript(result.data);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.automation(automationId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.automations }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.workflowCatalog }),
+      ]);
+      setIsOpen(false);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
+      setIsPending(false);
+    }
   }
 
   return (

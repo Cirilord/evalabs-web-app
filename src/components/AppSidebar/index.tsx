@@ -21,9 +21,11 @@ import {
 } from '@/ui/sidebar';
 
 import { SettingsDialog } from './components/SettingsDialog';
+import { useAutomations } from './hooks/useAutomations';
 import { useAutomationStatuses } from './hooks/useAutomationStatuses';
+import { useWorkflows } from './hooks/useWorkflows';
 import { useWorkflowStatuses } from './hooks/useWorkflowStatuses';
-import { type AppSidebarProps, type SidebarItemStatus } from './types';
+import { type SidebarItemStatus } from './types';
 
 function getRunIndicator(status: SidebarItemStatus | undefined, t: (key: string) => string) {
   switch (status) {
@@ -48,10 +50,11 @@ function getRunIndicator(status: SidebarItemStatus | undefined, t: (key: string)
   }
 }
 
-export function AppSidebar(props: AppSidebarProps) {
-  const { automationItems, workflowItems } = props;
+export function AppSidebar() {
   const { t } = useTranslation();
+  const { data: automationItems = [] } = useAutomations();
   const { data: automationStatuses = [] } = useAutomationStatuses();
+  const { data: workflowItems = [] } = useWorkflows();
   const { data: workflowStatuses = [] } = useWorkflowStatuses();
   const statusByAutomation = new Map(
     automationStatuses.map((automationStatus) => [

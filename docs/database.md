@@ -15,3 +15,11 @@ For Prisma models, each relation field must be declared immediately after its fo
 Database table names must always be plural and use `snake_case`. Database column names must always use `snake_case`.
 
 Prisma field names may use `camelCase`, but must use `@map("snake_case_column")` whenever the Prisma name differs from the database column. Prisma models must use `@@map("plural_snake_case_table")` whenever the Prisma model name differs from the database table.
+
+## Browser migrations
+
+Prisma migrations are the single source of truth and belong in `prisma/migrations`.
+
+The `predev` and `prebuild` lifecycle scripts copy their SQL files to `public/prisma` so the browser's SQLite worker can apply pending migrations to its OPFS database. Those generated public files are not committed, but their source migrations are accessible to everyone who uses the application.
+
+Never include secrets, private endpoints, credentials, personal data, or other sensitive values in a migration. Treat every migration SQL file as public application code.

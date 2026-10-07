@@ -15,7 +15,10 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
-    'src/generated/prisma/**',
+    'public/prisma/**',
+    'public/sqlite/**',
+    'src/generated/prisma-browser/**',
+    'src/generated/prisma-server/**',
   ]),
   {
     plugins: {

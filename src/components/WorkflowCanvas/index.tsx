@@ -42,6 +42,11 @@ import {
   type WorkflowGraph,
   type WorkflowRunnable,
 } from '@/lib/workflows';
+import { completeWorkflowNodeRun } from '@/services/workflows/client/complete-workflow-node-run';
+import { completeWorkflowRun } from '@/services/workflows/client/complete-workflow-run';
+import { createWorkflowNodeRun } from '@/services/workflows/client/create-workflow-node-run';
+import { createWorkflowRun } from '@/services/workflows/client/create-workflow-run';
+import { saveWorkflow } from '@/services/workflows/client/save-workflow';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover';
@@ -56,13 +61,6 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/ui/sheet';
 import { Textarea } from '@/ui/textarea';
 
-import {
-  completeWorkflowNodeRun,
-  completeWorkflowRun,
-  createWorkflowNodeRun,
-  createWorkflowRun,
-  saveWorkflow,
-} from './action';
 import { EndDetailsPanel } from './components/EndDetailsPanel';
 import { RunWorkflowDialog } from './components/RunWorkflowDialog';
 import { StartDetailsPanel } from './components/StartDetailsPanel';
@@ -484,16 +482,15 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
     setIsSaving(true);
 
     try {
-      const result = await saveWorkflow(graph);
-
-      if (result.serverError) {
-        setError(result.serverError);
-        return;
-      }
+      await saveWorkflow(graph);
 
       setSavedGraph(JSON.stringify(graph));
+      await queryClient.invalidateQueries({ queryKey: queryKeys.workflows });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.workflowCatalog });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.workflow(graph.id) });
       router.replace(`/workflows/${graph.id}`);
-      router.refresh();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : String(saveError));
     } finally {
       setIsSaving(false);
     }
@@ -549,20 +546,16 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         return [[input.name, input.type === 'number' && value !== '' ? Number(value) : value]];
       })
     );
-    const workflowRunResult = await createWorkflowRun({
+    const workflowRun = await createWorkflowRun({
       inputs: suppliedInputs,
       workflowId: graph.id,
     });
 
-    if (workflowRunResult.serverError || !workflowRunResult.data) {
-      throw new Error(workflowRunResult.serverError ?? 'Unable to create the workflow run.');
-    }
-
     await queryClient.invalidateQueries({ queryKey: queryKeys.workflowStatuses });
 
     let activeNodeId: string | undefined;
-    const runId = workflowRunResult.data.id;
-    const startedAt = new Date();
+    const runId = workflowRun.id;
+    const startedAt = workflowRun.startedAt;
 
     setIsRunning(true);
     setNodeStatuses({ [graph.start.id]: 'running', [graph.output.id]: 'waiting' });
@@ -640,26 +633,22 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
           }
 
           setNodeStatuses((current) => ({ ...current, [node.id]: 'running' }));
-          const nodeRunResult = await createWorkflowNodeRun({
+          const persistedNodeRun = await createWorkflowNodeRun({
             inputs,
             nodeName: runnable.name,
             workflowNodeId: node.id,
             workflowRunId: runId,
           });
 
-          if (nodeRunResult.serverError || !nodeRunResult.data) {
-            throw new Error(nodeRunResult.serverError ?? `Unable to create ${runnable.name} run.`);
-          }
-
           const nodeRun = {
             error: '',
             finishedAt: null,
-            id: nodeRunResult.data.id,
+            id: persistedNodeRun.id,
             inputs,
             logs: '',
             nodeName: runnable.name,
             outputs: {},
-            startedAt: new Date(),
+            startedAt: persistedNodeRun.startedAt,
             status: 'running',
             workflowNodeId: node.id,
           } satisfies WorkflowRunHistory['nodeRuns'][number];
@@ -696,14 +685,13 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
             const nodeLogs = result.logs;
             if (nodeLogs) logs.push(`${runnable.name}\n${nodeLogs}`);
 
-            const completion = await completeWorkflowNodeRun({
+            await completeWorkflowNodeRun({
               error: '',
               logs: nodeLogs,
               nodeRunId: nodeRun.id,
               outputs,
               status: 'succeeded',
             });
-            if (completion.serverError) throw new Error(completion.serverError);
 
             setWorkflowRuns((current) =>
               current.map((run) =>
@@ -777,14 +765,13 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
       };
 
       const outputs = await executeGraph(graph, suppliedInputs, suppliedFiles);
-      const completion = await completeWorkflowRun({
+      await completeWorkflowRun({
         error: '',
         logs: logs.join('\n\n'),
         outputs,
         runId,
         status: 'succeeded',
       });
-      if (completion.serverError) throw new Error(completion.serverError);
 
       setNodeStatuses((current) => ({
         ...current,
@@ -832,6 +819,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
     } finally {
       setIsRunning(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.workflowStatuses });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.workflow(graph.id) });
     }
   }
 

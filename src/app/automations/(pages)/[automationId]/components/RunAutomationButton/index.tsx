@@ -2,13 +2,14 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { FileIcon, LoaderCircleIcon, PlayIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useRunner } from '@/contexts/RunnerProvider';
 import { queryKeys } from '@/lib/query-keys';
 import { getPyodideRunnerLabel } from '@/lib/runner';
+import { completeAutomationRun } from '@/services/automations/client/complete-automation-run';
+import { createAutomationRun } from '@/services/automations/client/create-automation-run';
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
 import {
@@ -23,8 +24,8 @@ import {
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 
-import { completeAutomationRun, runAutomation } from './action';
 import { AutomationExecutionError, runAutomationInBrowser } from './hooks/useAutomationRunner';
+import { completeAutomationRunSchema, runAutomationSchema } from './schema/run-automation.schema';
 import { type RunAutomationButtonProps } from './types';
 
 export function RunAutomationButton(props: RunAutomationButtonProps) {
@@ -38,7 +39,6 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<Record<string, boolean | string>>({});
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   function openDialog() {
     setError(null);
@@ -72,24 +72,30 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         return [input.name, input.type === 'number' && value !== '' ? Number(value) : value];
       })
     );
-    const result = await runAutomation({ automationId, inputs: normalizedInputs, runnerVersion });
+    const runInput = runAutomationSchema.safeParse({
+      automationId,
+      inputs: normalizedInputs,
+      runnerVersion,
+    });
 
-    if (result.serverError) {
-      setError(result.serverError);
-      setIsPending(false);
-      return;
-    }
-
-    if (!result.data) {
+    if (!runInput.success) {
       setError(t('web.runCreationError'));
       setIsPending(false);
       return;
     }
 
-    await queryClient.invalidateQueries({ queryKey: queryKeys.automationStatuses });
-    setIsOpen(false);
+    let runId: string | undefined;
 
     try {
+      const run = await createAutomationRun(runInput.data);
+      runId = run.id;
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.automation(automationId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.automationStatuses }),
+      ]);
+      setIsOpen(false);
+
       const execution = await runAutomationInBrowser({
         files,
         inputs: normalizedInputs,
@@ -98,42 +104,49 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         runnerId,
         script,
       });
-      const completion = await completeAutomationRun({
+      const completionInput = completeAutomationRunSchema.parse({
         error: '',
         logs: execution.logs,
         outputs: execution.outputs,
-        runId: result.data.id,
+        runId: run.id,
         runnerVersion: execution.runnerVersion,
         status: 'succeeded',
       });
 
-      if (completion.serverError) throw new Error(completion.serverError);
-
-      router.refresh();
+      await completeAutomationRun(completionInput);
     } catch (executionError) {
       const executionLogs =
         executionError instanceof AutomationExecutionError ? executionError.logs : '';
       const executionMessage =
         executionError instanceof Error ? executionError.message : String(executionError);
-      const completion = await completeAutomationRun({
-        error: executionMessage,
-        logs: executionLogs,
-        outputs: {},
-        runId: result.data.id,
-        runnerVersion,
-        status: 'failed',
-      });
 
-      if (completion.serverError) {
-        setError(
-          `${executionMessage}\n${t('web.runSaveError', { error: completion.serverError })}`
-        );
-      } else {
+      if (!runId) {
         setError(executionMessage);
-        router.refresh();
+      } else {
+        try {
+          const completionInput = completeAutomationRunSchema.parse({
+            error: executionMessage,
+            logs: executionLogs,
+            outputs: {},
+            runId,
+            runnerVersion,
+            status: 'failed',
+          });
+
+          await completeAutomationRun(completionInput);
+          setError(executionMessage);
+        } catch (completionError) {
+          const completionMessage =
+            completionError instanceof Error ? completionError.message : String(completionError);
+
+          setError(`${executionMessage}\n${t('web.runSaveError', { error: completionMessage })}`);
+        }
       }
     } finally {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.automationStatuses });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.automation(automationId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.automationStatuses }),
+      ]);
       setIsPending(false);
     }
   }

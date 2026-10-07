@@ -1,0 +1,14 @@
+import 'server-only';
+
+import { prisma } from '@/lib/prisma/server';
+
+import { type AutomationListItem } from '../types';
+
+export async function findAutomations(): Promise<AutomationListItem[]> {
+  const automations = await prisma.automation.findMany({
+    orderBy: { updatedAt: 'desc' },
+    select: { id: true, name: true },
+  });
+
+  return automations;
+}

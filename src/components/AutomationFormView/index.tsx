@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   CheckIcon,
   CopyIcon,
@@ -11,10 +12,14 @@ import {
   XIcon,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { queryKeys } from '@/lib/query-keys';
+import { createAutomation } from '@/services/automations/client/create-automation';
+import { updateAutomation } from '@/services/automations/client/update-automation';
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
 import {
@@ -39,7 +44,6 @@ import {
 } from '@/ui/select';
 import { Textarea } from '@/ui/textarea';
 
-import { createAutomation, updateAutomation } from './action';
 import { createAutomationSchema } from './schema/automation-form.schema';
 import { type AutomationFormViewProps, type AutomationFormViewValues } from './types';
 
@@ -60,6 +64,8 @@ export function AutomationFormView(props: AutomationFormViewProps) {
   const { automation } = props;
   const cancelHref = automation ? `/automations/${automation.id}` : '/';
   const isEditing = Boolean(automation);
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const { t } = useTranslation();
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [libraryQuery, setLibraryQuery] = useState('');
@@ -141,17 +147,25 @@ export function AutomationFormView(props: AutomationFormViewProps) {
   async function submit(data: AutomationFormViewValues) {
     setIsSubmitting(true);
     try {
-      const result = automation
-        ? await updateAutomation({ ...data, id: automation.id })
-        : await createAutomation(data);
+      if (!automation) {
+        await createAutomation(data);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKeys.automations }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.workflowCatalog }),
+        ]);
+        router.push('/');
 
-      if (result.serverError) {
-        setError('root', { message: result.serverError });
-        setIsSubmitting(false);
-      } else if (result.validationErrors) {
-        setError('root', { message: t('web.formError') });
-        setIsSubmitting(false);
+        return;
       }
+
+      const updatedAutomation = await updateAutomation({ ...data, id: automation.id });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.automation(automation.id) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.automations }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.workflowCatalog }),
+      ]);
+      router.push(`/automations/${updatedAutomation.id}`);
     } catch (error) {
       setError('root', { message: error instanceof Error ? error.message : String(error) });
       setIsSubmitting(false);

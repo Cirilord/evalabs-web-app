@@ -43,4 +43,7 @@ next-env.d.ts
 
 # prisma
 /prisma/*.db*
-/src/generated/prisma/
+/public/sqlite/
+/public/prisma/
+/src/generated/prisma-browser/
+/src/generated/prisma-server/
