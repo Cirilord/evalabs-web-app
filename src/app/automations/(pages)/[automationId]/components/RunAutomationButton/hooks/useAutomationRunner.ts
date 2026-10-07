@@ -57,14 +57,18 @@ function rejectPendingExecutions(error: Error) {
 }
 
 function getExecutionWorker() {
-  if (executionWorker) return executionWorker;
+  if (executionWorker) {
+    return executionWorker;
+  }
 
   executionWorker = new Worker('/automation-runner.worker.mjs', { type: 'module' });
   executionWorker.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
     const message = event.data;
     const pendingExecution = pendingExecutions.get(message.requestId);
 
-    if (!pendingExecution) return;
+    if (!pendingExecution) {
+      return;
+    }
 
     pendingExecutions.delete(message.requestId);
     if (message.type === 'failed') {

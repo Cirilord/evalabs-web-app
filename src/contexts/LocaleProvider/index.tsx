@@ -12,11 +12,15 @@ const LOCALE_STORAGE_KEY = 'eva-labs-locale';
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 function getInitialLocale(): Locale {
-  if (typeof window === 'undefined') return 'en-US';
+  if (typeof window === 'undefined') {
+    return 'en-US';
+  }
 
   const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
 
-  if (storedLocale === 'en-US' || storedLocale === 'pt-BR') return storedLocale;
+  if (storedLocale === 'en-US' || storedLocale === 'pt-BR') {
+    return storedLocale;
+  }
 
   if (storedLocale === 'en') {
     window.localStorage.setItem(LOCALE_STORAGE_KEY, 'en-US');
@@ -56,7 +60,9 @@ export function LocaleProvider(props: LocaleProviderProps) {
 export function useLocale() {
   const locale = useContext(LocaleContext);
 
-  if (!locale) throw new Error('useLocale must be used within LocaleProvider.');
+  if (!locale) {
+    throw new Error('useLocale must be used within LocaleProvider.');
+  }
 
   return locale;
 }

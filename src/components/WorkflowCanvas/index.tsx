@@ -276,7 +276,9 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
   const [nodeStatuses, setNodeStatuses] = useState<Record<string, string>>(() => {
     const latestRun = initialRuns[0];
 
-    if (!latestRun) return {};
+    if (!latestRun) {
+      return {};
+    }
 
     return {
       [initialGraph.output.id]: latestRun.status,
@@ -497,7 +499,9 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
   }
 
   function connect(connection: Connection) {
-    if (!connection.source || !connection.target || connection.source === connection.target) return;
+    if (!connection.source || !connection.target || connection.source === connection.target) {
+      return;
+    }
 
     if (connection.source === graph.start.id) {
       setGraph((current) => ({
@@ -541,7 +545,9 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
       graph.inputs.flatMap((input) => {
         const value = suppliedValues[input.name];
 
-        if (value === undefined) return [];
+        if (value === undefined) {
+          return [];
+        }
 
         return [[input.name, input.type === 'number' && value !== '' ? Number(value) : value]];
       })
@@ -593,12 +599,16 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                 .every((connection) => completedOutputs.has(connection.sourceNodeId))
           );
 
-          if (!node) throw new Error('The workflow contains a cycle.');
+          if (!node) {
+            throw new Error('The workflow contains a cycle.');
+          }
 
           const runnable = catalog.find(
             (item) => item.id === node.runnableId && item.type === node.runnableType
           );
-          if (!runnable) throw new Error(`Unable to run ${node.runnableId}.`);
+          if (!runnable) {
+            throw new Error(`Unable to run ${node.runnableId}.`);
+          }
 
           activeNodeId = node.id;
 
@@ -614,7 +624,9 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
             ) {
               inputs[inputName] = value;
             }
-            if (workflowFiles[publicInputName]) files[inputName] = workflowFiles[publicInputName];
+            if (workflowFiles[publicInputName]) {
+              files[inputName] = workflowFiles[publicInputName];
+            }
           }
 
           for (const connection of workflowGraph.connections.filter(
@@ -683,7 +695,9 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                 ? (result.outputs as Record<string, unknown>)
                 : {};
             const nodeLogs = result.logs;
-            if (nodeLogs) logs.push(`${runnable.name}\n${nodeLogs}`);
+            if (nodeLogs) {
+              logs.push(`${runnable.name}\n${nodeLogs}`);
+            }
 
             await completeWorkflowNodeRun({
               error: '',
@@ -922,7 +936,9 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                 y: event.clientY,
               });
 
-              if (runnable) addRunnable(runnable, position);
+              if (runnable) {
+                addRunnable(runnable, position);
+              }
             } catch {
               setError(t('workflow.addRunnableError'));
             }
@@ -934,7 +950,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
           onPaneClick={() => setSelectedNodeId(undefined)}
           onNodeDragStop={(_, node) => {
             setGraph((current) => {
-              if (node.id === current.start.id)
+              if (node.id === current.start.id) {
                 return {
                   ...current,
                   start: {
@@ -943,7 +959,8 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                     positionY: node.position.y,
                   },
                 };
-              if (node.id === current.output.id)
+              }
+              if (node.id === current.output.id) {
                 return {
                   ...current,
                   output: {
@@ -952,6 +969,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                     positionY: node.position.y,
                   },
                 };
+              }
 
               return {
                 ...current,
@@ -1108,9 +1126,10 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                           delete fixedInputs[input.name];
                           delete inputBindings[input.name];
 
-                          if (value === 'fixed')
+                          if (value === 'fixed') {
                             fixedInputs[input.name] =
                               input.type === 'boolean' ? false : input.type === 'number' ? 0 : '';
+                          }
 
                           setGraph((current) => ({
                             ...current,

@@ -111,15 +111,17 @@ export function AutomationFormView(props: AutomationFormViewProps) {
   function synchronizeMainInputs(inputCount: number) {
     const script = getValues('script');
     const mainFunction = script.match(/\bdef\s+main\s*\([^)]*\)/)?.[0];
-    if (mainFunction)
+    if (mainFunction) {
       setValue(
         'script',
         script.replace(mainFunction, `def main(${inputCount ? 'inputs: dict' : ''})`)
       );
+    }
   }
   function addLibrary(name: string) {
-    if (name && !libraries.some((library) => library.name.toLowerCase() === name.toLowerCase()))
+    if (name && !libraries.some((library) => library.name.toLowerCase() === name.toLowerCase())) {
       setValue('libraries', [...libraries, { name, version: 'latest' }]);
+    }
     setLibraryQuery('');
   }
   function prompt() {
@@ -174,7 +176,9 @@ export function AutomationFormView(props: AutomationFormViewProps) {
   }
   async function chooseFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     setValue('script', await file.text());
     setValue('scriptPath', file.name, { shouldValidate: true });
   }
@@ -187,7 +191,9 @@ export function AutomationFormView(props: AutomationFormViewProps) {
         synchronizeMainInputs(fields.length - 1);
         remove(index);
         void trigger('script');
-      } else removeOutput(index);
+      } else {
+        removeOutput(index);
+      }
     };
     return (
       <div key={field.id} className="rounded-lg border bg-background p-4">

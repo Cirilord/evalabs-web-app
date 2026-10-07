@@ -63,7 +63,9 @@ export function RunWorkflowDialog(props: RunWorkflowDialogProps) {
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open);
-        if (open) resetValues();
+        if (open) {
+          resetValues();
+        }
       }}
     >
       <SheetTrigger render={<Button disabled={isRunning} type="button" />}>

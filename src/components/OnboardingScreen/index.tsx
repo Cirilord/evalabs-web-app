@@ -127,7 +127,9 @@ export function OnboardingScreen(props: Readonly<OnboardingScreenProps>) {
                 ]}
                 value={locale}
                 onValueChange={(value) => {
-                  if (value === 'en-US' || value === 'pt-BR') setLocale(value);
+                  if (value === 'en-US' || value === 'pt-BR') {
+                    setLocale(value);
+                  }
                 }}
               >
                 <SelectTrigger className="mt-4 h-10 w-full bg-background px-3 shadow-xs">
@@ -157,7 +159,9 @@ export function OnboardingScreen(props: Readonly<OnboardingScreenProps>) {
                   }))}
                   value={selectedRunnerId}
                   onValueChange={(value) => {
-                    if (value && isPyodideRunnerId(value)) setPendingRunnerId(value);
+                    if (value && isPyodideRunnerId(value)) {
+                      setPendingRunnerId(value);
+                    }
                   }}
                 >
                   <SelectTrigger className="h-10 flex-1 bg-background px-3 shadow-xs">

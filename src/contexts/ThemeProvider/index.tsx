@@ -58,7 +58,9 @@ export function ThemeProvider(props: ThemeProviderProps) {
 export function useTheme() {
   const theme = useContext(ThemeContext);
 
-  if (!theme) throw new Error('useTheme must be used within ThemeProvider.');
+  if (!theme) {
+    throw new Error('useTheme must be used within ThemeProvider.');
+  }
 
   return theme;
 }

@@ -176,7 +176,9 @@ async function execute(query: BrowserSqliteQuery): Promise<number> {
   const statement = database.prepare(query.sql);
 
   try {
-    if (query.args.length > 0) statement.bind(query.args as never[]);
+    if (query.args.length > 0) {
+      statement.bind(query.args as never[]);
+    }
     statement.step();
 
     return database.changes();
@@ -197,7 +199,9 @@ async function query(queryRequest: BrowserSqliteQuery): Promise<BrowserSqliteQue
   const statement = database.prepare(queryRequest.sql);
 
   try {
-    if (queryRequest.args.length > 0) statement.bind(queryRequest.args as never[]);
+    if (queryRequest.args.length > 0) {
+      statement.bind(queryRequest.args as never[]);
+    }
 
     const columnNames = statement.getColumnNames();
     const rows: unknown[][] = [];
@@ -219,13 +223,19 @@ async function handleRequest(
     case 'close':
       return closeDatabase();
     case 'execute':
-      if (!request.payload) throw new Error('A query payload is required.');
+      if (!request.payload) {
+        throw new Error('A query payload is required.');
+      }
       return execute(request.payload);
     case 'executeScript':
-      if (!request.payload) throw new Error('A query payload is required.');
+      if (!request.payload) {
+        throw new Error('A query payload is required.');
+      }
       return executeScript(request.payload.sql);
     case 'query':
-      if (!request.payload) throw new Error('A query payload is required.');
+      if (!request.payload) {
+        throw new Error('A query payload is required.');
+      }
       return query(request.payload);
   }
 }

@@ -34,7 +34,9 @@ export function RunnerProvider(props: RunnerProviderProps) {
 export function useRunner() {
   const runner = useContext(RunnerContext);
 
-  if (!runner) throw new Error('useRunner must be used within RunnerProvider.');
+  if (!runner) {
+    throw new Error('useRunner must be used within RunnerProvider.');
+  }
 
   return runner;
 }

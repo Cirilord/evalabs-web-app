@@ -101,7 +101,9 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 }))}
                 value={theme}
                 onValueChange={(value) => {
-                  if (value === 'dark' || value === 'light' || value === 'system') setTheme(value);
+                  if (value === 'dark' || value === 'light' || value === 'system') {
+                    setTheme(value);
+                  }
                 }}
               >
                 <SelectTrigger className="w-36 shrink-0">
@@ -133,7 +135,9 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 }))}
                 value={locale}
                 onValueChange={(value) => {
-                  if (value === 'en-US' || value === 'pt-BR') setLocale(value);
+                  if (value === 'en-US' || value === 'pt-BR') {
+                    setLocale(value);
+                  }
                 }}
               >
                 <SelectTrigger className="w-44 shrink-0">
@@ -183,7 +187,9 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 }))}
                 value={runnerId}
                 onValueChange={(value) => {
-                  if (value && isPyodideRunnerId(value)) setRunnerId(value);
+                  if (value && isPyodideRunnerId(value)) {
+                    setRunnerId(value);
+                  }
                 }}
               >
                 <SelectTrigger className="w-64 shrink-0">

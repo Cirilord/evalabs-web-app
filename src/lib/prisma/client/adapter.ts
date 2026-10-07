@@ -65,7 +65,9 @@ class PrismaBrowserSqlite3Worker {
     });
     this.worker.addEventListener('message', (event: MessageEvent<BrowserSqliteWorkerResponse>) => {
       const pendingRequest = this.pending.get(event.data.id);
-      if (!pendingRequest) return;
+      if (!pendingRequest) {
+        return;
+      }
 
       this.pending.delete(event.data.id);
 

@@ -79,7 +79,9 @@ export function getWorkflowErrors(
 ): WorkflowError[] {
   const errors: WorkflowError[] = [];
 
-  if (!graph.name.trim()) errors.push({ key: 'workflow.errorWorkflowName' });
+  if (!graph.name.trim()) {
+    errors.push({ key: 'workflow.errorWorkflowName' });
+  }
 
   for (const ports of [graph.inputs, graph.outputs]) {
     if (

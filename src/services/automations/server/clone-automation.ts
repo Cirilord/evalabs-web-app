@@ -8,7 +8,9 @@ import { getCloneAutomationName } from '../utils';
 export async function cloneAutomation(input: AutomationIdInput): Promise<AutomationIdentifier> {
   const automation = await prisma.automation.findUnique({ where: { id: input.automationId } });
 
-  if (!automation) throw new Error('Automation not found.');
+  if (!automation) {
+    throw new Error('Automation not found.');
+  }
 
   const clonedAutomation = await prisma.automation.create({
     data: {

@@ -33,7 +33,9 @@ function createWorkflowViewportSaver(workflowId: string) {
     clearTimeout(timer);
     timer = undefined;
 
-    if (!pendingViewport) return;
+    if (!pendingViewport) {
+      return;
+    }
 
     try {
       window.localStorage.setItem(getStorageKey(workflowId), JSON.stringify(pendingViewport));

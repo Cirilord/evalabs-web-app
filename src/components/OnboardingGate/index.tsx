@@ -25,9 +25,13 @@ export function OnboardingGate(props: Readonly<OnboardingGateProps>) {
     setIsOnboardingComplete(true);
   }
 
-  if (isOnboardingComplete === null) return null;
+  if (isOnboardingComplete === null) {
+    return null;
+  }
 
-  if (!isOnboardingComplete) return <OnboardingScreen onComplete={completeOnboarding} />;
+  if (!isOnboardingComplete) {
+    return <OnboardingScreen onComplete={completeOnboarding} />;
+  }
 
   return children;
 }

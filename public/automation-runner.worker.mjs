@@ -19,10 +19,14 @@ function getInputFilePath(inputName, file) {
 
 function getPyodide(runnerId) {
   const runner = PYODIDE_RUNNERS[runnerId];
-  if (!runner) throw new Error(`Unsupported Pyodide runner: ${runnerId}`);
+  if (!runner) {
+    throw new Error(`Unsupported Pyodide runner: ${runnerId}`);
+  }
 
   const pyodide = pyodidePromises.get(runnerId);
-  if (pyodide) return pyodide;
+  if (pyodide) {
+    return pyodide;
+  }
 
   const packageBaseUrl = `https://cdn.jsdelivr.net/pyodide/v${runner.pyodideVersion}/full/`;
   const promise = import(`${packageBaseUrl}pyodide.mjs`).then(({ loadPyodide }) =>

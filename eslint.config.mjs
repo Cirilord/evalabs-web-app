@@ -82,6 +82,11 @@ const eslintConfig = defineConfig([
   },
   eslintConfigPrettier,
   eslintPluginPrettierRecommended,
+  {
+    rules: {
+      curly: ['error', 'all'],
+    },
+  },
 ]);
 
 export default eslintConfig;

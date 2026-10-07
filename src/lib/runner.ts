@@ -37,7 +37,9 @@ export function isPyodideRunnerId(value: string): value is PyodideRunnerId {
 export function getPyodideRunner(runnerId: PyodideRunnerId) {
   const runner = PYODIDE_RUNNERS.find((item) => item.id === runnerId);
 
-  if (!runner) throw new Error(`Unsupported Pyodide runner: ${runnerId}`);
+  if (!runner) {
+    throw new Error(`Unsupported Pyodide runner: ${runnerId}`);
+  }
 
   return runner;
 }

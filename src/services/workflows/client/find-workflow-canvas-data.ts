@@ -27,7 +27,9 @@ export async function findWorkflowCanvasData(
     }),
   ]);
 
-  if (!workflow) return null;
+  if (!workflow) {
+    return null;
+  }
 
   const data = {
     catalog: toWorkflowCatalog(automations, workflows),

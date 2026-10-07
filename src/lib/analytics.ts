@@ -21,11 +21,15 @@ function isAnalyticsEnabled(preference: TelemetryPreference) {
 }
 
 function setGoogleAnalyticsDisabled(disabled: boolean) {
-  if (measurementId) Reflect.set(window, `ga-disable-${measurementId}`, disabled);
+  if (measurementId) {
+    Reflect.set(window, `ga-disable-${measurementId}`, disabled);
+  }
 }
 
 function ensureAnalyticsIsLoaded(preference: TelemetryPreference) {
-  if (!isAnalyticsEnabled(preference) || !measurementId) return;
+  if (!isAnalyticsEnabled(preference) || !measurementId) {
+    return;
+  }
 
   setGoogleAnalyticsDisabled(false);
   window.dataLayer ??= [];
@@ -35,7 +39,9 @@ function ensureAnalyticsIsLoaded(preference: TelemetryPreference) {
     window.dataLayer?.push(arguments);
   };
 
-  if (document.querySelector(`script[data-ga-measurement-id="${measurementId}"]`)) return;
+  if (document.querySelector(`script[data-ga-measurement-id="${measurementId}"]`)) {
+    return;
+  }
 
   window.gtag('js', new Date());
   window.gtag('consent', 'default', { analytics_storage: 'granted' });
@@ -49,7 +55,9 @@ function ensureAnalyticsIsLoaded(preference: TelemetryPreference) {
 }
 
 export function getTelemetryPreference(): TelemetryPreference {
-  if (typeof window === 'undefined') return 'enabled';
+  if (typeof window === 'undefined') {
+    return 'enabled';
+  }
 
   const preference = window.localStorage.getItem(TELEMETRY_STORAGE_KEY);
 
@@ -71,13 +79,17 @@ export function setTelemetryPreference(preference: TelemetryPreference) {
 export function initializeAnalytics(preference: TelemetryPreference) {
   setGoogleAnalyticsDisabled(!isAnalyticsEnabled(preference));
 
-  if (isAnalyticsEnabled(preference)) ensureAnalyticsIsLoaded(preference);
+  if (isAnalyticsEnabled(preference)) {
+    ensureAnalyticsIsLoaded(preference);
+  }
 }
 
 export function trackEvent(name: string, parameters?: AnalyticsParameters) {
   const preference = getTelemetryPreference();
 
-  if (!isAnalyticsEnabled(preference)) return;
+  if (!isAnalyticsEnabled(preference)) {
+    return;
+  }
 
   ensureAnalyticsIsLoaded(preference);
   window.gtag?.('event', name, parameters);

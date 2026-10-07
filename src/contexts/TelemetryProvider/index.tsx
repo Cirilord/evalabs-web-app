@@ -46,7 +46,9 @@ export function TelemetryProvider(props: TelemetryProviderProps) {
 export function useTelemetry() {
   const telemetry = useContext(TelemetryContext);
 
-  if (!telemetry) throw new Error('useTelemetry must be used within TelemetryProvider.');
+  if (!telemetry) {
+    throw new Error('useTelemetry must be used within TelemetryProvider.');
+  }
 
   return telemetry;
 }
