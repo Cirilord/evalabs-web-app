@@ -9,9 +9,9 @@
   "scripts": {
     "predev": "yarn prebuild",
     "dev": "next dev",
-    "prebuild": "node scripts/copy-sqlite-assets.mjs",
+    "prebuild": "node scripts/prebuild.mjs",
     "build": "next build",
-    "postbuild": "node scripts/copy-standalone-assets.mjs",
+    "postbuild": "node scripts/postbuild.mjs",
     "start": "next start",
     "prisma": "prisma",
     "prisma:format": "prisma format",
