@@ -5,6 +5,7 @@ import { FilePenLineIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PythonCodeEditor } from '@/components/PythonCodeEditor';
 import { queryKeys } from '@/lib/query-keys';
 import { updateAutomationScript } from '@/services/automations/client/update-automation-script';
 import { Button } from '@/ui/button';
@@ -17,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/ui/dialog';
-import { Textarea } from '@/ui/textarea';
 
 import { updateAutomationScriptSchema } from './schema/update-automation-script.schema';
 import { type EditScriptButtonProps } from './types';
@@ -70,11 +70,12 @@ export function EditScriptButton(props: EditScriptButtonProps) {
             <DialogDescription>{t('runs.editScriptDescription')}</DialogDescription>
           </DialogHeader>
           <div className="min-h-0 flex-1 p-6">
-            <Textarea
-              aria-label={t('web.automationScript')}
-              className="min-h-96 resize-y font-mono text-xs"
+            <PythonCodeEditor
+              ariaLabel={t('web.automationScript')}
+              id={`automation-script-${automationId}`}
+              minHeight="24rem"
               value={script}
-              onChange={(event) => setScript(event.target.value)}
+              onChange={setScript}
             />
             {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
           </div>

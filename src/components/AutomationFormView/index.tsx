@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { PythonCodeEditor } from '@/components/PythonCodeEditor';
 import { queryKeys } from '@/lib/query-keys';
 import { createAutomation } from '@/services/automations/client/create-automation';
 import { updateAutomation } from '@/services/automations/client/update-automation';
@@ -466,10 +467,17 @@ export function AutomationFormView(props: AutomationFormViewProps) {
             <div className="space-y-2">
               <Label htmlFor="script">{t('create.script')}</Label>
               <p className="text-sm text-muted-foreground">{t('create.scriptHint')}</p>
-              <Textarea
-                {...register('script')}
-                className="min-h-80 font-mono text-xs"
-                id="script"
+              <Controller
+                control={control}
+                name="script"
+                render={({ field: scriptField }) => (
+                  <PythonCodeEditor
+                    ariaLabel={t('create.script')}
+                    id="script"
+                    value={scriptField.value}
+                    onChange={scriptField.onChange}
+                  />
+                )}
               />
             </div>
           ) : (
