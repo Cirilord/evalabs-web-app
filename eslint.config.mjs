@@ -3,6 +3,7 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import eslintPluginImport from 'eslint-plugin-import';
+import { configs as eslintPluginPackageJsonConfigs } from 'eslint-plugin-package-json';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 
 const eslintConfig = defineConfig([
@@ -69,6 +70,14 @@ const eslintConfig = defineConfig([
     files: ['**/page.tsx', '**/layout.tsx', '**/*.config.js', '**/*.config.mjs', '**/*.config.ts'],
     rules: {
       'import/no-default-export': 'off',
+    },
+  },
+  {
+    files: ['package.json'],
+    languageOptions: eslintPluginPackageJsonConfigs.recommended.languageOptions,
+    plugins: eslintPluginPackageJsonConfigs.recommended.plugins,
+    rules: {
+      'package-json/restrict-dependency-ranges': ['error', { rangeType: 'pin' }],
     },
   },
   eslintConfigPrettier,
