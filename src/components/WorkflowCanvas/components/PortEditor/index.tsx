@@ -49,7 +49,7 @@ export function PortEditor(props: PortEditorProps) {
           onChange(ports.filter((_, currentIndex) => currentIndex !== index));
 
         return (
-          <div key={index} className="rounded-lg border bg-background p-4">
+          <div key={index} className="rounded-lg border bg-card p-4">
             <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3">
               <p className="text-sm font-medium">
                 {t(inputs ? 'workflow.input' : 'workflow.output')} {index + 1}
@@ -58,7 +58,7 @@ export function PortEditor(props: PortEditorProps) {
                 aria-label={t('common.remove')}
                 size="icon"
                 type="button"
-                variant="ghost"
+                variant="destructive"
                 onClick={removePort}
               >
                 <Trash2Icon />

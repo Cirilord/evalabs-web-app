@@ -111,7 +111,7 @@ function RunnableNode(props: NodeProps<CanvasNode>) {
   return (
     <div
       className={cn(
-        'min-w-56 rounded-lg border bg-background py-3 shadow-sm',
+        'min-w-56 rounded-lg border bg-card py-3 shadow-sm',
         selected && 'ring-2 ring-ring',
         Boolean(data.inputErrors?.length) && 'border-destructive ring-2 ring-destructive/30'
       )}
@@ -176,7 +176,7 @@ function StartNode(props: NodeProps<CanvasNode>) {
   return (
     <div
       className={cn(
-        'min-w-56 rounded-lg border bg-background py-3 shadow-sm',
+        'min-w-56 rounded-lg border bg-card py-3 shadow-sm',
         selected && 'ring-2 ring-ring'
       )}
     >
@@ -220,7 +220,7 @@ function EndNode(props: NodeProps<CanvasNode>) {
   return (
     <div
       className={cn(
-        'min-w-56 rounded-lg border bg-background py-3 shadow-sm',
+        'min-w-56 rounded-lg border bg-card py-3 shadow-sm',
         selected && 'ring-2 ring-ring'
       )}
     >

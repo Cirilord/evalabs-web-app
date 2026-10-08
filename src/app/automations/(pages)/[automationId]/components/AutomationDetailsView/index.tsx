@@ -75,12 +75,12 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
           </div>
 
           {runs.length === 0 ? (
-            <div className="rounded-lg border bg-background px-5 py-10 text-center">
+            <div className="rounded-lg border bg-card px-5 py-10 text-center">
               <p className="font-medium">{t('runs.noRuns')}</p>
               <p className="mt-1 text-sm text-muted-foreground">{t('runs.noRunsDescription')}</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border bg-background">
+            <div className="overflow-hidden rounded-lg border bg-card">
               {runs.map((run) => (
                 <article className="border-b px-5 py-4 last:border-b-0" key={run.id}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
