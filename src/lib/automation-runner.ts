@@ -1,6 +1,7 @@
-import { type PyodideRunnerId } from '@/lib/runner';
+import 'client-only';
 
-import { type AutomationLibrary } from '../types';
+import { type PyodideRunnerId } from '@/lib/runner';
+import { type AutomationLibrary } from '@/services/automations/types';
 
 export class AutomationExecutionError extends Error {
   public readonly logs: string;

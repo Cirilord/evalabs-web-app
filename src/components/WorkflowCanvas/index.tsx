@@ -29,11 +29,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  AutomationExecutionError,
-  runAutomationInBrowser,
-} from '@/app/automations/(pages)/[automationId]/components/RunAutomationButton/hooks/use-automation-runner';
 import { useRunner } from '@/contexts/RunnerProvider';
+import { AutomationExecutionError, runAutomationInBrowser } from '@/lib/automation-runner';
 import { queryKeys } from '@/lib/query-keys';
 import {
   configureWorkflowOutputs,

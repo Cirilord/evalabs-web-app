@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useRunner } from '@/contexts/RunnerProvider';
+import { AutomationExecutionError, runAutomationInBrowser } from '@/lib/automation-runner';
 import { queryKeys } from '@/lib/query-keys';
 import { getPyodideRunnerLabel } from '@/lib/runner';
 import { completeAutomationRun } from '@/services/automations/client/complete-automation-run';
@@ -24,7 +25,6 @@ import {
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 
-import { AutomationExecutionError, runAutomationInBrowser } from './hooks/use-automation-runner';
 import { completeAutomationRunSchema, runAutomationSchema } from './schema/run-automation.schema';
 import { type RunAutomationButtonProps } from './types';
 
