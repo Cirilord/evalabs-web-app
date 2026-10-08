@@ -68,10 +68,15 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-12 justify-center border-b border-sidebar-border px-2 py-0">
+      <SidebarHeader className="h-12 justify-center border-b border-sidebar-border p-0">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/" />} size="lg" tooltip="EVA Labs">
+            <SidebarMenuButton
+              className="h-full rounded-none px-2"
+              render={<Link href="/" />}
+              size="lg"
+              tooltip="EVA Labs"
+            >
               <Image
                 alt=""
                 aria-hidden="true"
