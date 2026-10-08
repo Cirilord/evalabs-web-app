@@ -6,6 +6,10 @@ const PYODIDE_RUNNERS = {
   'pyodide-314': { pyodideVersion: '314.0.7', pythonVersion: '3.14' },
 };
 const pyodidePromises = new Map();
+const SILENT_PACKAGE_LOAD_OPTIONS = {
+  errorCallback: () => {},
+  messageCallback: () => {},
+};
 
 function getRequirement(library) {
   return library.version === 'latest' ? library.name : `${library.name}==${library.version}`;
@@ -30,7 +34,11 @@ function getPyodide(runnerId) {
 
   const packageBaseUrl = `https://cdn.jsdelivr.net/pyodide/v${runner.pyodideVersion}/full/`;
   const promise = import(`${packageBaseUrl}pyodide.mjs`).then(({ loadPyodide }) =>
-    loadPyodide({ indexURL: packageBaseUrl })
+    loadPyodide({
+      indexURL: packageBaseUrl,
+      stderr: () => {},
+      stdout: () => {},
+    })
   );
   pyodidePromises.set(runnerId, promise);
 
@@ -43,19 +51,22 @@ async function executeAutomation(message) {
   const runner = PYODIDE_RUNNERS[runnerId];
   const pyodide = await getPyodide(runnerId);
 
-  pyodide.setStdout({ batched: (output) => logs.push(output) });
-  pyodide.setStderr({ batched: (output) => logs.push(output) });
+  pyodide.setStdout({ batched: () => {} });
+  pyodide.setStderr({ batched: () => {} });
 
   try {
     if (libraries.length > 0) {
-      await pyodide.loadPackage('micropip');
+      await pyodide.loadPackage('micropip', SILENT_PACKAGE_LOAD_OPTIONS);
       await pyodide.runPythonAsync(
         `import micropip\nawait micropip.install(${JSON.stringify(libraries.map(getRequirement))})`,
         { filename: '<automation-libraries>' }
       );
     }
 
-    await pyodide.loadPackagesFromImports(script);
+    await pyodide.loadPackagesFromImports(script, SILENT_PACKAGE_LOAD_OPTIONS);
+
+    pyodide.setStdout({ batched: (output) => logs.push(output) });
+    pyodide.setStderr({ batched: (output) => logs.push(output) });
 
     const executionInputs = { ...inputs };
     for (const [inputName, file] of Object.entries(files)) {
