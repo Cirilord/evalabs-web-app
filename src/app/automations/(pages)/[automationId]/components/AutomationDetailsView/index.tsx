@@ -23,6 +23,12 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
     running: t('runs.statusRunning'),
     succeeded: t('runs.statusSucceeded'),
   };
+  const statusClassNames = {
+    failed: 'text-destructive',
+    preparing: 'text-warning',
+    running: 'text-sidebar-primary',
+    succeeded: 'text-success',
+  };
 
   return (
     <main className="flex-1 p-6 sm:p-10">
@@ -79,7 +85,9 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
                 <article className="border-b px-5 py-4 last:border-b-0" key={run.id}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium">{statusLabels[run.status]}</span>
+                      <span className={`text-sm font-medium ${statusClassNames[run.status]}`}>
+                        {statusLabels[run.status]}
+                      </span>
                       <span className="text-sm text-muted-foreground">
                         {run.startedAt.toLocaleString(i18n.language)}
                       </span>
@@ -96,7 +104,9 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
                         </span>
                       )}
                       {(run.status === 'preparing' || run.status === 'running') && (
-                        <LoaderCircleIcon className="animate-spin text-muted-foreground" />
+                        <LoaderCircleIcon
+                          className={`animate-spin ${statusClassNames[run.status]}`}
+                        />
                       )}
                       <RunDetailsButton run={run} />
                     </div>
