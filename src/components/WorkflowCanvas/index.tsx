@@ -1365,10 +1365,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
           {sidebarMode === 'toolbox' ? (
             <>
               <div className="flex flex-col gap-3 border-b p-4">
-                <div>
-                  <h2 className="font-semibold">{t('workflow.toolbox')}</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">{t('workflow.toolboxHint')}</p>
-                </div>
+                <p className="text-xs text-muted-foreground">{t('workflow.toolboxHint')}</p>
                 <Input
                   aria-label={t('workflow.searchAutomations')}
                   placeholder={t('workflow.searchAutomations')}
@@ -1427,7 +1424,6 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
             </>
           ) : (
             <div className="flex flex-col gap-5 p-4">
-              <h2 className="font-semibold">{t('workflow.board')}</h2>
               {(['flow', 'automation', 'workflow'] as const).map((type) => {
                 const items = boardItems.filter((item) =>
                   type === 'flow'
@@ -1466,6 +1462,16 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                         {item.label}
                       </Button>
                     ))}
+                    {items.length === 0 && type === 'automation' && (
+                      <p className="rounded-lg border border-dashed px-2.5 py-2.5 text-sm text-muted-foreground">
+                        {t('workflow.noAutomationsOnBoard')}
+                      </p>
+                    )}
+                    {items.length === 0 && type === 'workflow' && (
+                      <p className="rounded-lg border border-dashed px-2.5 py-2.5 text-sm text-muted-foreground">
+                        {t('workflow.noWorkflowsOnBoard')}
+                      </p>
+                    )}
                   </section>
                 );
               })}
