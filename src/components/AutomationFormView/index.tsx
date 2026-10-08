@@ -178,57 +178,10 @@ export function AutomationFormView(props: AutomationFormViewProps) {
     };
     return (
       <div key={field.id} className="rounded-lg border bg-background p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="grid flex-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor={`${fieldId}-name`}>{t('create.name')}</Label>
-              <Input
-                {...register(`${path}.name`)}
-                id={`${fieldId}-name`}
-                placeholder={input ? 'file_path' : 'report_file'}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${fieldId}-type`}>
-                {input ? t('create.inputType') : t('web.outputType')}
-              </Label>
-              <Controller
-                control={control}
-                name={`${path}.type`}
-                render={({ field: typeField }) => (
-                  <Select
-                    items={PORT_TYPE_ITEMS}
-                    value={typeField.value}
-                    onValueChange={typeField.onChange}
-                  >
-                    <SelectTrigger id={`${fieldId}-type`} className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>
-                          {input ? t('create.inputType') : t('web.outputType')}
-                        </SelectLabel>
-                        {PORT_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor={`${fieldId}-description`}>{t('create.description')}</Label>
-              <Input
-                {...register(`${path}.description`)}
-                id={`${fieldId}-description`}
-                placeholder={input ? t('create.inputDescription') : t('web.outputDescription')}
-              />
-            </div>
-          </div>
+        <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3">
+          <p className="text-sm font-medium">
+            {t(input ? 'workflow.input' : 'workflow.output')} {index + 1}
+          </p>
           <Button
             aria-label={t('common.remove')}
             size="icon"
@@ -238,6 +191,56 @@ export function AutomationFormView(props: AutomationFormViewProps) {
           >
             <Trash2Icon />
           </Button>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor={`${fieldId}-name`}>{t('create.name')}</Label>
+            <Input
+              {...register(`${path}.name`)}
+              id={`${fieldId}-name`}
+              placeholder={input ? 'file_path' : 'report_file'}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`${fieldId}-type`}>
+              {input ? t('create.inputType') : t('web.outputType')}
+            </Label>
+            <Controller
+              control={control}
+              name={`${path}.type`}
+              render={({ field: typeField }) => (
+                <Select
+                  items={PORT_TYPE_ITEMS}
+                  value={typeField.value}
+                  onValueChange={typeField.onChange}
+                >
+                  <SelectTrigger id={`${fieldId}-type`} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {input ? t('create.inputType') : t('web.outputType')}
+                      </SelectLabel>
+                      {PORT_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor={`${fieldId}-description`}>{t('create.description')}</Label>
+            <Input
+              {...register(`${path}.description`)}
+              id={`${fieldId}-description`}
+              placeholder={input ? t('create.inputDescription') : t('web.outputDescription')}
+            />
+          </div>
         </div>
         {input && (
           <label className="mt-4 flex items-center gap-2 text-sm font-medium">
