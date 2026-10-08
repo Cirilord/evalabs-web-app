@@ -8,12 +8,13 @@ import CodeMirror from '@uiw/react-codemirror';
 import { type PythonCodeEditorProps } from './types';
 
 export function PythonCodeEditor(props: PythonCodeEditorProps) {
-  const { ariaLabel, id, minHeight = '20rem', onChange, value } = props;
+  const { ariaLabel, height, id, minHeight, onChange, value } = props;
+  const editorMinHeight = minHeight ?? (height ? undefined : '20rem');
 
   return (
     <CodeMirror
       aria-label={ariaLabel}
-      className="overflow-hidden rounded-md border"
+      className="h-full overflow-hidden rounded-md border"
       extensions={[
         python(),
         indentationMarkers({
@@ -23,8 +24,9 @@ export function PythonCodeEditor(props: PythonCodeEditorProps) {
           thickness: 1,
         }),
       ]}
+      {...(height ? { height } : {})}
       id={id}
-      minHeight={minHeight}
+      {...(editorMinHeight ? { minHeight: editorMinHeight } : {})}
       theme={oneDark}
       value={value}
       onChange={onChange}

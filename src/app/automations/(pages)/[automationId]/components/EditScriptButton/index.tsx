@@ -64,19 +64,21 @@ export function EditScriptButton(props: EditScriptButtonProps) {
         {t('runs.editScript')}
       </Button>
       <Dialog open={isOpen} onOpenChange={(open) => !isPending && setIsOpen(open)}>
-        <DialogContent className="flex max-h-[calc(100svh-2rem)] max-w-4xl flex-col gap-0 p-0">
+        <DialogContent className="flex h-[calc(100svh-4rem)] max-h-[48rem] max-w-6xl flex-col gap-0 p-0">
           <DialogHeader className="shrink-0 border-b px-6 py-5">
             <DialogTitle>{t('runs.editScript')}</DialogTitle>
             <DialogDescription>{t('runs.editScriptDescription')}</DialogDescription>
           </DialogHeader>
-          <div className="min-h-0 flex-1 p-6">
-            <PythonCodeEditor
-              ariaLabel={t('web.automationScript')}
-              id={`automation-script-${automationId}`}
-              minHeight="24rem"
-              value={script}
-              onChange={setScript}
-            />
+          <div className="flex min-h-0 flex-1 flex-col p-6">
+            <div className="min-h-0 flex-1">
+              <PythonCodeEditor
+                ariaLabel={t('web.automationScript')}
+                height="100%"
+                id={`automation-script-${automationId}`}
+                value={script}
+                onChange={setScript}
+              />
+            </div>
             {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter className="shrink-0 border-t px-6 py-4">
