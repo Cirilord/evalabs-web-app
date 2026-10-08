@@ -23,7 +23,12 @@ export default function HomePage(props: HomePageProps) {
           <p>{t('home.description')}</p>
         </CardContent>
         <CardFooter>
-          <Button nativeButton={false} render={<Link href="/automations/new" />} type="button">
+          <Button
+            className="!bg-card !text-card-foreground hover:!bg-card/80"
+            nativeButton={false}
+            render={<Link href="/automations/new" />}
+            type="button"
+          >
             {t('home.createAutomation')}
           </Button>
         </CardFooter>
