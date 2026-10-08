@@ -14,13 +14,6 @@ datasource db {
   provider = "sqlite"
 }
 
-enum AutomationScriptSource {
-  inline
-  file
-  managed
-  external
-}
-
 enum RunnableType {
   automation
   workflow
@@ -45,9 +38,7 @@ model Automation {
   id           String                 @id @default(uuid(7))
   name         String
   description  String                 @default("")
-  script       String                 @default("")
-  scriptSource AutomationScriptSource @default(inline) @map("script_source")
-  scriptPath   String?                @map("script_path")
+  script String @default("")
 
   inputsJson    Json @map("inputs_json")
   librariesJson Json @map("libraries_json")

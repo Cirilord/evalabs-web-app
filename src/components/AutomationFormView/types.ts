@@ -12,8 +12,6 @@ export type AutomationFormAutomation = Readonly<{
   name: string;
   outputs: AutomationFormViewValues['outputs'];
   script: string;
-  scriptPath: string | null;
-  scriptSource: 'external' | 'file' | 'inline' | 'managed';
 }>;
 
 export type AutomationFormViewProps = Readonly<{

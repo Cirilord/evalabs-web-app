@@ -2,15 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  CheckIcon,
-  CopyIcon,
-  FileIcon,
-  PlusIcon,
-  SparklesIcon,
-  Trash2Icon,
-  XIcon,
-} from 'lucide-react';
+import { CheckIcon, CopyIcon, PlusIcon, SparklesIcon, Trash2Icon, XIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -89,8 +81,6 @@ export function AutomationFormView(props: AutomationFormViewProps) {
       name: automation?.name ?? '',
       outputs: automation?.outputs ?? [],
       script: automation?.script ?? DEFAULT_SCRIPT,
-      scriptMode: automation?.scriptSource === 'file' ? 'file' : 'inline',
-      scriptPath: automation?.scriptPath ?? null,
     },
     resolver: zodResolver(createAutomationSchema),
   });
@@ -101,7 +91,6 @@ export function AutomationFormView(props: AutomationFormViewProps) {
     remove: removeOutput,
   } = useFieldArray({ control, name: 'outputs' });
   const libraries = useWatch({ control, name: 'libraries' });
-  const scriptMode = useWatch({ control, name: 'scriptMode' });
   const query = libraryQuery.trim();
   const suggestions = LIBRARIES.filter(
     (name) =>
@@ -173,14 +162,6 @@ export function AutomationFormView(props: AutomationFormViewProps) {
       setError('root', { message: error instanceof Error ? error.message : String(error) });
       setIsSubmitting(false);
     }
-  }
-  async function chooseFile(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.currentTarget.files?.[0];
-    if (!file) {
-      return;
-    }
-    setValue('script', await file.text());
-    setValue('scriptPath', file.name, { shouldValidate: true });
   }
   function portEditor(kind: 'inputs' | 'outputs', field: { id: string }, index: number) {
     const input = kind === 'inputs';
@@ -442,78 +423,21 @@ export function AutomationFormView(props: AutomationFormViewProps) {
             )}
           </section>
           <div className="space-y-2">
-            <Label htmlFor="script-mode">{t('create.scriptSource')}</Label>
+            <Label htmlFor="script">{t('create.script')}</Label>
+            <p className="text-sm text-muted-foreground">{t('create.scriptHint')}</p>
             <Controller
               control={control}
-              name="scriptMode"
-              render={({ field }) => (
-                <Select
-                  items={[
-                    { label: t('create.scriptSourceInline'), value: 'inline' },
-                    { label: t('create.scriptSourceFile'), value: 'file' },
-                  ]}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger id="script-mode" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>{t('create.scriptSource')}</SelectLabel>
-                      <SelectItem value="inline">{t('create.scriptSourceInline')}</SelectItem>
-                      <SelectItem value="file">{t('create.scriptSourceFile')}</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+              name="script"
+              render={({ field: scriptField }) => (
+                <PythonCodeEditor
+                  ariaLabel={t('create.script')}
+                  id="script"
+                  value={scriptField.value}
+                  onChange={scriptField.onChange}
+                />
               )}
             />
           </div>
-          {scriptMode === 'inline' ? (
-            <div className="space-y-2">
-              <Label htmlFor="script">{t('create.script')}</Label>
-              <p className="text-sm text-muted-foreground">{t('create.scriptHint')}</p>
-              <Controller
-                control={control}
-                name="script"
-                render={({ field: scriptField }) => (
-                  <PythonCodeEditor
-                    ariaLabel={t('create.script')}
-                    id="script"
-                    value={scriptField.value}
-                    onChange={scriptField.onChange}
-                  />
-                )}
-              />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="script-file">{t('create.choosePythonFile')}</Label>
-              <div className="flex gap-2">
-                <Input
-                  readOnly
-                  value={getValues('scriptPath') ?? ''}
-                  placeholder={t('create.noPythonFile')}
-                />
-                <Button
-                  nativeButton={false}
-                  render={<label htmlFor="script-file" />}
-                  type="button"
-                  variant="outline"
-                >
-                  <FileIcon data-icon="inline-start" />
-                  {t('common.file')}
-                </Button>
-                <Input
-                  accept=".py"
-                  className="sr-only"
-                  id="script-file"
-                  type="file"
-                  onChange={chooseFile}
-                />
-              </div>
-            </div>
-          )}
           {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
           <div className="flex justify-end gap-3">
             <Button

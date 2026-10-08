@@ -20,8 +20,6 @@ export async function cloneAutomation(input: AutomationIdInput): Promise<Automat
       name: getCloneAutomationName(automation.name),
       outputsJson: automation.outputsJson as never,
       script: automation.script,
-      scriptPath: automation.scriptPath,
-      scriptSource: automation.scriptSource,
     },
     select: { id: true },
   });

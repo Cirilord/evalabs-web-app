@@ -40,8 +40,6 @@ export function EditAutomationPageView(props: EditAutomationPageViewProps) {
         name: automation.name,
         outputs: automation.outputsJson as never,
         script: automation.script,
-        scriptPath: automation.scriptPath,
-        scriptSource: automation.scriptSource,
       }}
     />
   );

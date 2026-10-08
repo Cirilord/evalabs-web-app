@@ -102,19 +102,8 @@ Apply the contract above with these specific user instructions:
     'create.noInputs': 'This automation does not require any inputs yet.',
     'create.required': 'Required',
     'create.script': 'Script',
-    'create.scriptSource': 'Script source',
-    'create.scriptSourceFile': 'Choose Python file',
-    'create.scriptSourceInline': 'Write script',
-    'create.scriptFileMode': 'File handling',
-    'create.scriptFileModeClone': 'Clone into this automation',
-    'create.scriptFileModeCloneHint': 'A managed copy will be saved with this automation.',
-    'create.scriptFileModeExternal': 'Use original file',
-    'create.scriptFileModeExternalHint': 'The latest original file will be copied for each run.',
     'create.startDescription':
       'Start with a name, a short description, and the script that runs the automation.',
-    'create.choosePythonFile': 'Choose Python file',
-    'create.noPythonFile': 'No Python file selected',
-    'create.scriptFileHint': 'Choose whether to clone the file or keep using its original version.',
     'create.scriptHint':
       'Define main() when there are no inputs, or main(inputs) otherwise. Use print for logs; input() is not supported.',
     'create.saving': 'Saving...',
@@ -405,21 +394,8 @@ Aplique o contrato acima seguindo estas instruções específicas:
     'create.noInputs': 'Esta automação ainda não precisa de entradas.',
     'create.required': 'Obrigatório',
     'create.script': 'Script',
-    'create.scriptSource': 'Fonte do script',
-    'create.scriptSourceFile': 'Escolher arquivo Python',
-    'create.scriptSourceInline': 'Escrever script',
-    'create.scriptFileMode': 'Como usar o arquivo',
-    'create.scriptFileModeClone': 'Clonar para esta automação',
-    'create.scriptFileModeCloneHint': 'Uma cópia gerenciada será salva com esta automação.',
-    'create.scriptFileModeExternal': 'Usar arquivo original',
-    'create.scriptFileModeExternalHint':
-      'A versão atual do arquivo original será copiada a cada execução.',
     'create.startDescription':
       'Comece com um nome, uma breve descrição e o script que executa a automação.',
-    'create.choosePythonFile': 'Escolher arquivo Python',
-    'create.noPythonFile': 'Nenhum arquivo Python selecionado',
-    'create.scriptFileHint':
-      'Escolha se deseja clonar o arquivo ou continuar usando sua versão original.',
     'create.scriptHint':
       'Defina main() quando não houver entradas, ou main(inputs) caso contrário. Use print para logs; input() não é suportado.',
     'create.saving': 'Salvando...',

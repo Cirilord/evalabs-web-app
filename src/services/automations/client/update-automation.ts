@@ -15,8 +15,6 @@ export async function updateAutomation(
       name: input.name,
       outputsJson: input.outputs,
       script: input.script,
-      scriptPath: input.scriptMode === 'file' ? input.scriptPath : null,
-      scriptSource: input.scriptMode,
     },
     select: { id: true },
     where: { id: input.id },

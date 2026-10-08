@@ -8,7 +8,7 @@ export async function updateAutomationScript(
   input: UpdateAutomationScriptInput
 ): Promise<AutomationIdentifier> {
   const automation = await prisma.automation.update({
-    data: { script: input.script, scriptPath: null, scriptSource: 'managed' },
+    data: { script: input.script },
     select: { id: true },
     where: { id: input.automationId },
   });

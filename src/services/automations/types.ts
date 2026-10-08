@@ -49,8 +49,6 @@ export type CreateAutomationInput = {
   name: string;
   outputs: AutomationOutput[];
   script: string;
-  scriptMode: 'file' | 'inline';
-  scriptPath: string | null;
 };
 
 export type UpdateAutomationInput = CreateAutomationInput & {

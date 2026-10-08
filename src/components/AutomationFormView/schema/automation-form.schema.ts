@@ -27,8 +27,6 @@ export const createAutomationSchema = z
     name: z.string().trim().min(1).max(100),
     outputs: z.array(automationOutputSchema),
     script: z.string(),
-    scriptMode: z.enum(['file', 'inline']),
-    scriptPath: z.string().nullable(),
   })
   .superRefine((automation, context) => {
     for (const kind of ['inputs', 'outputs'] as const) {
@@ -45,18 +43,6 @@ export const createAutomationSchema = z
 
         names.add(port.name);
       });
-    }
-
-    if (automation.scriptMode === 'file') {
-      if (!automation.scriptPath?.trim()) {
-        context.addIssue({
-          code: 'custom',
-          message: 'Choose a Python file.',
-          path: ['scriptPath'],
-        });
-      }
-
-      return;
     }
 
     const script = automation.script.trim();
