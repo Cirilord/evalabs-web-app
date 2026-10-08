@@ -263,7 +263,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
   const [graph, setGraph] = useState<WorkflowGraph>(initialGraph);
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [sidebarMode, setSidebarMode] = useState<'board' | 'toolbox'>('toolbox');
+  const [sidebarMode, setSidebarMode] = useState<'board' | 'toolbox'>('board');
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
   const [isRunsOpen, setIsRunsOpen] = useState(false);
