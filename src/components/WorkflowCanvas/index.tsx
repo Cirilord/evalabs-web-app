@@ -26,7 +26,7 @@ import {
   WorkflowIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useRunner } from '@/contexts/RunnerProvider';
@@ -285,6 +285,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
       ),
     };
   });
+  const nodeTypes = useRef(NODE_TYPES).current;
   const [workflowRuns, setWorkflowRuns] = useState<readonly WorkflowRunHistory[]>(initialRuns);
   const { initialViewport, scheduleViewportSave } = useWorkflowViewport(initialGraph.id);
   const { runnerId } = useRunner();
@@ -926,8 +927,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
             fitView={!initialViewport}
             fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
             nodes={canvasNodes}
-            nodeTypes={NODE_TYPES}
-            proOptions={{ hideAttribution: true }}
+            nodeTypes={nodeTypes}
             onConnect={connect}
             onDragOver={(event) => {
               event.preventDefault();
