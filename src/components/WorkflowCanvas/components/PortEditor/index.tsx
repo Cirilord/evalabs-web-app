@@ -25,7 +25,7 @@ type WorkflowPort = WorkflowInput | WorkflowOutput;
 const PORT_TYPES: readonly WorkflowPortType[] = ['text', 'file', 'number', 'boolean'];
 
 export function PortEditor(props: PortEditorProps) {
-  const { inputs, onChange, ports } = props;
+  const { inputs, onChange, ports, renderPortDetails } = props;
   const { t } = useTranslation();
   const id = useId();
   function updatePort(index: number, patch: Partial<WorkflowPort>) {
@@ -44,80 +44,91 @@ export function PortEditor(props: PortEditorProps) {
 
   return (
     <FieldGroup>
-      {ports.map((port, index) => (
-        <div key={index} className="rounded-lg border bg-background p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="grid flex-1 gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor={`${id}-${index}-name`}>{t('workflow.name')}</FieldLabel>
-                <Input
-                  id={`${id}-${index}-name`}
-                  value={port.name}
-                  onChange={(event) => updatePort(index, { name: event.target.value })}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>{t('workflow.type')}</FieldLabel>
-                <Select
-                  items={PORT_TYPES.map((type) => ({ label: type, value: type }))}
-                  value={port.type}
-                  onValueChange={(value) => {
-                    if (
-                      value === 'boolean' ||
-                      value === 'file' ||
-                      value === 'number' ||
-                      value === 'text'
-                    ) {
-                      updatePort(index, { type: value });
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {PORT_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field className="sm:col-span-2">
-                <FieldLabel htmlFor={`${id}-${index}-description`}>
-                  {t('workflow.description')}
-                </FieldLabel>
-                <Input
-                  id={`${id}-${index}-description`}
-                  value={port.description}
-                  onChange={(event) => updatePort(index, { description: event.target.value })}
-                />
-              </Field>
+      {ports.map((port, index) => {
+        const removePort = () =>
+          onChange(ports.filter((_, currentIndex) => currentIndex !== index));
+
+        return (
+          <div key={index} className="rounded-lg border bg-background p-4">
+            <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3">
+              <p className="text-sm font-medium">
+                {t(inputs ? 'workflow.input' : 'workflow.output')} {index + 1}
+              </p>
+              <Button
+                aria-label={t('common.remove')}
+                size="icon"
+                type="button"
+                variant="ghost"
+                onClick={removePort}
+              >
+                <Trash2Icon />
+              </Button>
             </div>
-            <Button
-              aria-label={t('common.remove')}
-              size="icon"
-              type="button"
-              variant="ghost"
-              onClick={() => onChange(ports.filter((_, currentIndex) => currentIndex !== index))}
-            >
-              <Trash2Icon />
-            </Button>
+            <div className="mt-4 flex items-start justify-between gap-4">
+              <div className="grid flex-1 gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor={`${id}-${index}-name`}>{t('workflow.name')}</FieldLabel>
+                  <Input
+                    id={`${id}-${index}-name`}
+                    value={port.name}
+                    onChange={(event) => updatePort(index, { name: event.target.value })}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel>{t('workflow.type')}</FieldLabel>
+                  <Select
+                    items={PORT_TYPES.map((type) => ({ label: type, value: type }))}
+                    value={port.type}
+                    onValueChange={(value) => {
+                      if (
+                        value === 'boolean' ||
+                        value === 'file' ||
+                        value === 'number' ||
+                        value === 'text'
+                      ) {
+                        updatePort(index, { type: value });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {PORT_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field className="sm:col-span-2">
+                  <FieldLabel htmlFor={`${id}-${index}-description`}>
+                    {t('workflow.description')}
+                  </FieldLabel>
+                  <Input
+                    id={`${id}-${index}-description`}
+                    value={port.description}
+                    onChange={(event) => updatePort(index, { description: event.target.value })}
+                  />
+                </Field>
+              </div>
+            </div>
+            {inputs && 'required' in port && (
+              <label className="mt-4 flex items-center gap-2 text-sm font-medium">
+                <Checkbox
+                  checked={port.required}
+                  onCheckedChange={(checked) => updatePort(index, { required: checked === true })}
+                />
+                {t('workflow.required')}
+              </label>
+            )}
+            {renderPortDetails?.(port, index)}
           </div>
-          {inputs && 'required' in port && (
-            <label className="mt-4 flex items-center gap-2 text-sm font-medium">
-              <Checkbox
-                checked={port.required}
-                onCheckedChange={(checked) => updatePort(index, { required: checked === true })}
-              />
-              {t('workflow.required')}
-            </label>
-          )}
-        </div>
-      ))}
+        );
+      })}
       <Button type="button" variant="outline" onClick={addPort}>
         <PlusIcon data-icon="inline-start" />
         {t(inputs ? 'workflow.addInput' : 'workflow.addOutput')}

@@ -18,10 +18,9 @@ import {
 } from '@xyflow/react';
 import { cn } from 'cn';
 import {
+  ArrowLeftIcon,
   BotIcon,
   LogOutIcon,
-  PanelRightCloseIcon,
-  PanelRightOpenIcon,
   PlayIcon,
   TriangleAlertIcon,
   WorkflowIcon,
@@ -264,10 +263,11 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
   const [graph, setGraph] = useState<WorkflowGraph>(initialGraph);
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [isToolboxOpen, setIsToolboxOpen] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState<'board' | 'toolbox'>('toolbox');
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
   const [isRunsOpen, setIsRunsOpen] = useState(false);
+  const [isNodeDetailsOpen, setIsNodeDetailsOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<CanvasNode>>();
   const [toolboxQuery, setToolboxQuery] = useState('');
@@ -298,8 +298,23 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         (item) => item.id === selectedNode.runnableId && item.type === selectedNode.runnableType
       )
     : undefined;
-  const isStartSelected = selectedNodeId === graph.start.id;
-  const isEndSelected = selectedNodeId === graph.output.id;
+  const isStartSelected = isNodeDetailsOpen && selectedNodeId === graph.start.id;
+  const isEndSelected = isNodeDetailsOpen && selectedNodeId === graph.output.id;
+  const boardItems = [
+    { id: graph.start.id, label: t('workflow.start'), type: 'start' },
+    ...graph.nodes.map((node) => {
+      const runnable = catalog.find(
+        (item) => item.id === node.runnableId && item.type === node.runnableType
+      );
+
+      return {
+        id: node.id,
+        label: runnable?.name ?? t('workflow.missingRunnable'),
+        type: node.runnableType,
+      };
+    }),
+    { id: graph.output.id, label: t('workflow.end'), type: 'end' },
+  ];
   const errors = useMemo(() => getWorkflowErrors(graph, catalog), [catalog, graph]);
 
   function getRunStatusLabel(status: string) {
@@ -387,6 +402,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         },
         id: node.id,
         position: { x: node.positionX, y: node.positionY },
+        selected: isNodeDetailsOpen && selectedNodeId === node.id,
         type: 'runnable' as const,
       };
     });
@@ -403,6 +419,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         },
         id: graph.start.id,
         position: { x: graph.start.positionX, y: graph.start.positionY },
+        selected: isNodeDetailsOpen && selectedNodeId === graph.start.id,
         type: 'start',
       },
       ...runnableNodes,
@@ -417,10 +434,11 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         },
         id: graph.output.id,
         position: { x: graph.output.positionX, y: graph.output.positionY },
+        selected: isNodeDetailsOpen && selectedNodeId === graph.output.id,
         type: 'end',
       },
     ];
-  }, [catalog, graph, nodeStatuses, t]);
+  }, [catalog, graph, isNodeDetailsOpen, nodeStatuses, selectedNodeId, t]);
   const [canvasNodes, setCanvasNodes, handleNodesChange] = useNodesState<CanvasNode>(nodes);
 
   useEffect(() => {
@@ -476,7 +494,17 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         },
       ],
     }));
+    openNodeDetails(nodeId);
+  }
+
+  function closeNodeDetails() {
+    setIsNodeDetailsOpen(false);
+    setSelectedNodeId(undefined);
+  }
+
+  function openNodeDetails(nodeId: string) {
     setSelectedNodeId(nodeId);
+    setIsNodeDetailsOpen(true);
   }
 
   async function persistWorkflow() {
@@ -891,343 +919,233 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
             </PopoverContent>
           </Popover>
         )}
-        <Button
-          className="ml-auto"
-          type="button"
-          variant="outline"
-          onClick={() => setIsToolboxOpen((current) => !current)}
-        >
-          {isToolboxOpen ? (
-            <PanelRightCloseIcon data-icon="inline-start" />
-          ) : (
-            <PanelRightOpenIcon data-icon="inline-start" />
-          )}
-          {isToolboxOpen ? t('workflow.hideToolbox') : t('workflow.showToolbox')}
-        </Button>
       </header>
       {error && <p className="px-4 py-2 text-sm text-destructive">{error}</p>}
-      <div className="relative min-h-80 flex-1">
-        <ReactFlow<CanvasNode>
-          defaultViewport={initialViewport ?? { x: 0, y: 0, zoom: 1 }}
-          edges={edges}
-          fitView={!initialViewport}
-          fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
-          nodes={canvasNodes}
-          nodeTypes={NODE_TYPES}
-          proOptions={{ hideAttribution: true }}
-          onConnect={connect}
-          onDragOver={(event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'copy';
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
+      <div className="relative flex min-h-80 flex-1">
+        <div className="min-w-0 flex-1">
+          <ReactFlow<CanvasNode>
+            defaultViewport={initialViewport ?? { x: 0, y: 0, zoom: 1 }}
+            edges={edges}
+            fitView={!initialViewport}
+            fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
+            nodes={canvasNodes}
+            nodeTypes={NODE_TYPES}
+            proOptions={{ hideAttribution: true }}
+            onConnect={connect}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = 'copy';
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
 
-            try {
-              const item = JSON.parse(event.dataTransfer.getData('application/eva-runnable')) as {
-                id: string;
-                type: WorkflowRunnable['type'];
-              };
-              const runnable = catalog.find(
-                (candidate) => candidate.id === item.id && candidate.type === item.type
-              );
-              const position = reactFlowInstance?.screenToFlowPosition({
-                x: event.clientX,
-                y: event.clientY,
+              try {
+                const item = JSON.parse(event.dataTransfer.getData('application/eva-runnable')) as {
+                  id: string;
+                  type: WorkflowRunnable['type'];
+                };
+                const runnable = catalog.find(
+                  (candidate) => candidate.id === item.id && candidate.type === item.type
+                );
+                const position = reactFlowInstance?.screenToFlowPosition({
+                  x: event.clientX,
+                  y: event.clientY,
+                });
+
+                if (runnable) {
+                  addRunnable(runnable, position);
+                }
+              } catch {
+                setError(t('workflow.addRunnableError'));
+              }
+            }}
+            onInit={(instance) => setReactFlowInstance(instance)}
+            onNodeClick={(_, node) => openNodeDetails(node.id)}
+            onNodesChange={handleNodesChange}
+            onMove={(_, viewport) => scheduleViewportSave(viewport)}
+            onPaneClick={() => {
+              closeNodeDetails();
+            }}
+            onNodeDragStop={(_, node) => {
+              setGraph((current) => {
+                if (node.id === current.start.id) {
+                  return {
+                    ...current,
+                    start: {
+                      ...current.start,
+                      positionX: node.position.x,
+                      positionY: node.position.y,
+                    },
+                  };
+                }
+                if (node.id === current.output.id) {
+                  return {
+                    ...current,
+                    output: {
+                      ...current.output,
+                      positionX: node.position.x,
+                      positionY: node.position.y,
+                    },
+                  };
+                }
+
+                return {
+                  ...current,
+                  nodes: current.nodes.map((item) =>
+                    item.id === node.id
+                      ? {
+                          ...item,
+                          positionX: node.position.x,
+                          positionY: node.position.y,
+                        }
+                      : item
+                  ),
+                };
               });
-
-              if (runnable) {
-                addRunnable(runnable, position);
-              }
-            } catch {
-              setError(t('workflow.addRunnableError'));
-            }
-          }}
-          onInit={(instance) => setReactFlowInstance(instance)}
-          onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-          onNodesChange={handleNodesChange}
-          onMove={(_, viewport) => scheduleViewportSave(viewport)}
-          onPaneClick={() => setSelectedNodeId(undefined)}
-          onNodeDragStop={(_, node) => {
-            setGraph((current) => {
-              if (node.id === current.start.id) {
-                return {
-                  ...current,
-                  start: {
-                    ...current.start,
-                    positionX: node.position.x,
-                    positionY: node.position.y,
-                  },
-                };
-              }
-              if (node.id === current.output.id) {
-                return {
-                  ...current,
-                  output: {
-                    ...current.output,
-                    positionX: node.position.x,
-                    positionY: node.position.y,
-                  },
-                };
-              }
-
-              return {
-                ...current,
-                nodes: current.nodes.map((item) =>
-                  item.id === node.id
-                    ? {
-                        ...item,
-                        positionX: node.position.x,
-                        positionY: node.position.y,
-                      }
-                    : item
-                ),
-              };
-            });
-          }}
-          onNodesDelete={(deletedNodes) => {
-            const deletedIds = new Set(deletedNodes.map((node) => node.id));
-            setGraph((current) => ({
-              ...current,
-              connections: current.connections.filter(
-                (connection) =>
-                  !deletedIds.has(connection.sourceNodeId) &&
-                  !deletedIds.has(connection.targetNodeId)
-              ),
-              nodes: current.nodes.filter((node) => !deletedIds.has(node.id)),
-              start: {
-                ...current.start,
-                targets: current.start.targets.filter((target) => !deletedIds.has(target)),
-              },
-            }));
-          }}
-        >
-          <Background />
-          <Controls
-            className="!bottom-4 !left-4 !overflow-hidden !rounded-md !border !border-border !bg-background !shadow-sm [--xy-controls-button-background-color:var(--background)] [--xy-controls-button-background-color-hover:var(--muted)] [--xy-controls-button-color:var(--foreground)] [&_button]:!size-8 [&_button]:!border-0 [&_button]:!border-b [&_button]:!border-border [&_button:last-child]:!border-b-0 [&_button_svg]:!fill-foreground"
-            showInteractive={false}
-          />
-        </ReactFlow>
-        {isStartSelected && (
-          <StartDetailsPanel
-            graph={graph}
-            onInputsChange={(inputs) => setGraph((current) => ({ ...current, inputs }))}
-          />
-        )}
-        {isEndSelected && (
-          <EndDetailsPanel
-            catalog={catalog}
-            graph={graph}
-            onFixedOutputsChange={(fixedOutputs) =>
+            }}
+            onNodesDelete={(deletedNodes) => {
+              const deletedIds = new Set(deletedNodes.map((node) => node.id));
               setGraph((current) => ({
                 ...current,
-                output: { ...current.output, fixedOutputs },
-              }))
-            }
-            onOutputBindingsChange={(outputBindings) =>
-              setGraph((current) => ({ ...current, outputBindings }))
-            }
-            onOutputsChange={(outputs) =>
-              setGraph((current) => configureWorkflowOutputs(current, outputs))
-            }
-          />
-        )}
-        {selectedNode && (
-          <aside className="absolute inset-y-0 right-0 z-10 flex w-[28rem] flex-col gap-4 overflow-auto border-l bg-background p-4 shadow-lg">
-            <h2 className="font-medium">{selectedRunnable?.name ?? selectedNode.runnableId}</h2>
-            <p className="text-sm text-muted-foreground">{t('workflow.connectInput')}</p>
-            {selectedNode && selectedRunnable && (
-              <div className="flex flex-col gap-4">
-                {selectedRunnable.inputs.map((input) => {
-                  const connection = graph.connections.find(
-                    (item) =>
-                      item.targetNodeId === selectedNode.id && item.targetInputName === input.name
-                  );
-                  const sourceOptions = [
-                    ...(graph.start.targets.includes(selectedNode.id)
-                      ? graph.inputs
-                          .filter((port) => port.type === input.type)
-                          .map((port) => ({
-                            label: `${t('workflow.start')} · ${port.name}`,
-                            value: `start:${port.name}`,
-                          }))
-                      : []),
-                    ...graph.connections
-                      .filter(
-                        (item) =>
-                          item.targetNodeId === selectedNode.id &&
-                          item.sourceNodeId !== graph.start.id
-                      )
-                      .flatMap((item) => {
-                        const sourceNode = graph.nodes.find(
-                          (node) => node.id === item.sourceNodeId
-                        );
-                        const runnable = sourceNode
-                          ? catalog.find(
-                              (candidate) =>
-                                candidate.id === sourceNode.runnableId &&
-                                candidate.type === sourceNode.runnableType
-                            )
-                          : undefined;
-
-                        return (runnable?.outputs ?? [])
-                          .filter((output) => output.type === input.type)
-                          .map((output) => ({
-                            label: `${runnable?.name ?? t('workflow.missingRunnable')} · ${output.name}`,
-                            value: JSON.stringify({
-                              nodeId: item.sourceNodeId,
-                              outputName: output.name,
-                            }),
-                          }));
-                      }),
-                  ];
-                  const uniqueSourceOptions = Array.from(
-                    new Map(sourceOptions.map((option) => [option.value, option])).values()
-                  );
-                  const fixedValue = selectedNode.fixedInputs[input.name];
-                  const inputMode = Object.hasOwn(selectedNode.fixedInputs, input.name)
-                    ? 'fixed'
-                    : 'connection';
-                  const connectedValue = connection?.sourceOutputName
-                    ? JSON.stringify({
-                        nodeId: connection.sourceNodeId,
-                        outputName: connection.sourceOutputName,
-                      })
-                    : selectedNode.inputBindings[input.name]
-                      ? `start:${selectedNode.inputBindings[input.name]}`
-                      : null;
-
-                  return (
-                    <div
-                      key={input.name}
-                      className="flex flex-col gap-2 border-t pt-4 first:border-t-0 first:pt-0"
-                    >
-                      <p className="text-sm font-medium">
-                        {input.name}
-                        {input.required ? ' *' : ''} · {input.type}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{input.description}</p>
-                      <Select
-                        items={[
-                          { label: t('workflow.connectionInput'), value: 'connection' },
-                          { label: t('workflow.fixedValue'), value: 'fixed' },
-                        ]}
-                        value={inputMode}
-                        onValueChange={(value) => {
-                          const fixedInputs = { ...selectedNode.fixedInputs };
-                          const inputBindings = { ...selectedNode.inputBindings };
-                          const connections = graph.connections.filter(
-                            (item) =>
-                              !(
-                                item.targetNodeId === selectedNode.id &&
-                                item.targetInputName === input.name
-                              )
-                          );
-                          delete fixedInputs[input.name];
-                          delete inputBindings[input.name];
-
-                          if (value === 'fixed') {
-                            fixedInputs[input.name] =
-                              input.type === 'boolean' ? false : input.type === 'number' ? 0 : '';
-                          }
-
-                          setGraph((current) => ({
-                            ...current,
-                            connections,
-                            nodes: current.nodes.map((node) =>
-                              node.id === selectedNode.id
-                                ? { ...node, fixedInputs, inputBindings }
-                                : node
-                            ),
-                          }));
-                        }}
-                      >
-                        <SelectTrigger
-                          aria-label={t('workflow.sourceForInput', { name: input.name })}
-                          className="h-9 w-full"
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="connection">
-                              {t('workflow.connectionInput')}
-                            </SelectItem>
-                            <SelectItem value="fixed">{t('workflow.fixedValue')}</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                      {inputMode === 'fixed' ? (
-                        input.type === 'boolean' ? (
-                          <Select
-                            items={[
-                              { label: t('workflow.true'), value: 'true' },
-                              { label: t('workflow.false'), value: 'false' },
-                            ]}
-                            value={String(fixedValue)}
-                            onValueChange={(value) => {
-                              setGraph((current) => ({
-                                ...current,
-                                nodes: current.nodes.map((node) =>
-                                  node.id === selectedNode.id
-                                    ? {
-                                        ...node,
-                                        fixedInputs: {
-                                          ...node.fixedInputs,
-                                          [input.name]: value === 'true',
-                                        },
-                                      }
-                                    : node
-                                ),
-                              }));
-                            }}
-                          >
-                            <SelectTrigger aria-label={input.name} className="h-9 w-full">
-                              <SelectValue placeholder={t('workflow.selectValue')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectItem value="true">{t('workflow.true')}</SelectItem>
-                                <SelectItem value="false">{t('workflow.false')}</SelectItem>
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Input
-                            aria-label={input.name}
-                            step={input.type === 'number' ? 'any' : undefined}
-                            type={input.type === 'number' ? 'number' : 'text'}
-                            value={
-                              typeof fixedValue === 'string' || typeof fixedValue === 'number'
-                                ? fixedValue
-                                : ''
-                            }
-                            onChange={(event) => {
-                              const value =
-                                input.type === 'number'
-                                  ? event.target.value === ''
-                                    ? ''
-                                    : Number(event.target.value)
-                                  : event.target.value;
-                              setGraph((current) => ({
-                                ...current,
-                                nodes: current.nodes.map((node) =>
-                                  node.id === selectedNode.id
-                                    ? {
-                                        ...node,
-                                        fixedInputs: { ...node.fixedInputs, [input.name]: value },
-                                      }
-                                    : node
-                                ),
-                              }));
-                            }}
-                          />
+                connections: current.connections.filter(
+                  (connection) =>
+                    !deletedIds.has(connection.sourceNodeId) &&
+                    !deletedIds.has(connection.targetNodeId)
+                ),
+                nodes: current.nodes.filter((node) => !deletedIds.has(node.id)),
+                start: {
+                  ...current.start,
+                  targets: current.start.targets.filter((target) => !deletedIds.has(target)),
+                },
+              }));
+            }}
+          >
+            <Background />
+            <Controls
+              className="!bottom-4 !left-4 !overflow-hidden !rounded-md !border !border-border !bg-background !shadow-sm [--xy-controls-button-background-color:var(--background)] [--xy-controls-button-background-color-hover:var(--muted)] [--xy-controls-button-color:var(--foreground)] [&_button]:!size-8 [&_button]:!border-0 [&_button]:!border-b [&_button]:!border-border [&_button:last-child]:!border-b-0 [&_button_svg]:!fill-foreground"
+              showInteractive={false}
+            />
+          </ReactFlow>
+          {isStartSelected && (
+            <StartDetailsPanel
+              graph={graph}
+              onClose={closeNodeDetails}
+              onInputsChange={(inputs) => setGraph((current) => ({ ...current, inputs }))}
+            />
+          )}
+          {isEndSelected && (
+            <EndDetailsPanel
+              catalog={catalog}
+              graph={graph}
+              onClose={closeNodeDetails}
+              onFixedOutputsChange={(fixedOutputs) =>
+                setGraph((current) => ({
+                  ...current,
+                  output: { ...current.output, fixedOutputs },
+                }))
+              }
+              onOutputBindingsChange={(outputBindings) =>
+                setGraph((current) => ({ ...current, outputBindings }))
+              }
+              onOutputsChange={(outputs) =>
+                setGraph((current) => configureWorkflowOutputs(current, outputs))
+              }
+            />
+          )}
+          {isNodeDetailsOpen && selectedNode && (
+            <aside className="absolute inset-y-0 right-0 z-20 flex w-96 flex-col gap-4 overflow-auto border-l bg-background p-4 shadow-lg">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-medium">{selectedRunnable?.name ?? selectedNode.runnableId}</h2>
+                <Button
+                  aria-label={t('common.close')}
+                  size="icon"
+                  type="button"
+                  variant="ghost"
+                  onClick={closeNodeDetails}
+                >
+                  <ArrowLeftIcon />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">{t('workflow.connectInput')}</p>
+              {selectedNode && selectedRunnable && (
+                <div className="flex flex-col gap-4">
+                  {selectedRunnable.inputs.map((input) => {
+                    const connection = graph.connections.find(
+                      (item) =>
+                        item.targetNodeId === selectedNode.id && item.targetInputName === input.name
+                    );
+                    const sourceOptions = [
+                      ...(graph.start.targets.includes(selectedNode.id)
+                        ? graph.inputs
+                            .filter((port) => port.type === input.type)
+                            .map((port) => ({
+                              label: `${t('workflow.start')} · ${port.name}`,
+                              value: `start:${port.name}`,
+                            }))
+                        : []),
+                      ...graph.connections
+                        .filter(
+                          (item) =>
+                            item.targetNodeId === selectedNode.id &&
+                            item.sourceNodeId !== graph.start.id
                         )
-                      ) : (
+                        .flatMap((item) => {
+                          const sourceNode = graph.nodes.find(
+                            (node) => node.id === item.sourceNodeId
+                          );
+                          const runnable = sourceNode
+                            ? catalog.find(
+                                (candidate) =>
+                                  candidate.id === sourceNode.runnableId &&
+                                  candidate.type === sourceNode.runnableType
+                              )
+                            : undefined;
+
+                          return (runnable?.outputs ?? [])
+                            .filter((output) => output.type === input.type)
+                            .map((output) => ({
+                              label: `${runnable?.name ?? t('workflow.missingRunnable')} · ${output.name}`,
+                              value: JSON.stringify({
+                                nodeId: item.sourceNodeId,
+                                outputName: output.name,
+                              }),
+                            }));
+                        }),
+                    ];
+                    const uniqueSourceOptions = Array.from(
+                      new Map(sourceOptions.map((option) => [option.value, option])).values()
+                    );
+                    const fixedValue = selectedNode.fixedInputs[input.name];
+                    const inputMode = Object.hasOwn(selectedNode.fixedInputs, input.name)
+                      ? 'fixed'
+                      : 'connection';
+                    const connectedValue = connection?.sourceOutputName
+                      ? JSON.stringify({
+                          nodeId: connection.sourceNodeId,
+                          outputName: connection.sourceOutputName,
+                        })
+                      : selectedNode.inputBindings[input.name]
+                        ? `start:${selectedNode.inputBindings[input.name]}`
+                        : null;
+
+                    return (
+                      <div
+                        key={input.name}
+                        className="flex flex-col gap-2 border-t pt-4 first:border-t-0 first:pt-0"
+                      >
+                        <p className="text-sm font-medium">
+                          {input.name}
+                          {input.required ? ' *' : ''} · {input.type}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{input.description}</p>
                         <Select
-                          items={uniqueSourceOptions}
-                          value={connectedValue}
+                          items={[
+                            { label: t('workflow.connectionInput'), value: 'connection' },
+                            { label: t('workflow.fixedValue'), value: 'fixed' },
+                          ]}
+                          value={inputMode}
                           onValueChange={(value) => {
+                            const fixedInputs = { ...selectedNode.fixedInputs };
                             const inputBindings = { ...selectedNode.inputBindings };
                             const connections = graph.connections.filter(
                               (item) =>
@@ -1236,145 +1154,324 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                                   item.targetInputName === input.name
                                 )
                             );
-
+                            delete fixedInputs[input.name];
                             delete inputBindings[input.name];
 
-                            if (value?.startsWith('start:')) {
-                              inputBindings[input.name] = value.slice(6);
-                            } else if (value) {
-                              const source = JSON.parse(value) as {
-                                nodeId: string;
-                                outputName: string;
-                              };
-                              connections.push({
-                                id: crypto.randomUUID(),
-                                sourceNodeId: source.nodeId,
-                                sourceOutputName: source.outputName,
-                                targetInputName: input.name,
-                                targetNodeId: selectedNode.id,
-                              });
+                            if (value === 'fixed') {
+                              fixedInputs[input.name] =
+                                input.type === 'boolean' ? false : input.type === 'number' ? 0 : '';
                             }
 
                             setGraph((current) => ({
                               ...current,
                               connections,
                               nodes: current.nodes.map((node) =>
-                                node.id === selectedNode.id ? { ...node, inputBindings } : node
+                                node.id === selectedNode.id
+                                  ? { ...node, fixedInputs, inputBindings }
+                                  : node
                               ),
                             }));
                           }}
                         >
                           <SelectTrigger
-                            aria-label={t('workflow.connectedInputFor', { name: input.name })}
+                            aria-label={t('workflow.sourceForInput', { name: input.name })}
                             className="h-9 w-full"
                           >
-                            <SelectValue placeholder={t('workflow.selectConnectedInput')} />
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
-                              {uniqueSourceOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                              {uniqueSourceOptions.length === 0 && (
-                                <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                                  {t('workflow.noCompatibleInputs')}
-                                </p>
-                              )}
+                              <SelectItem value="connection">
+                                {t('workflow.connectionInput')}
+                              </SelectItem>
+                              <SelectItem value="fixed">{t('workflow.fixedValue')}</SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>
+                        {inputMode === 'fixed' ? (
+                          input.type === 'boolean' ? (
+                            <Select
+                              items={[
+                                { label: t('workflow.true'), value: 'true' },
+                                { label: t('workflow.false'), value: 'false' },
+                              ]}
+                              value={String(fixedValue)}
+                              onValueChange={(value) => {
+                                setGraph((current) => ({
+                                  ...current,
+                                  nodes: current.nodes.map((node) =>
+                                    node.id === selectedNode.id
+                                      ? {
+                                          ...node,
+                                          fixedInputs: {
+                                            ...node.fixedInputs,
+                                            [input.name]: value === 'true',
+                                          },
+                                        }
+                                      : node
+                                  ),
+                                }));
+                              }}
+                            >
+                              <SelectTrigger aria-label={input.name} className="h-9 w-full">
+                                <SelectValue placeholder={t('workflow.selectValue')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  <SelectItem value="true">{t('workflow.true')}</SelectItem>
+                                  <SelectItem value="false">{t('workflow.false')}</SelectItem>
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              aria-label={input.name}
+                              step={input.type === 'number' ? 'any' : undefined}
+                              type={input.type === 'number' ? 'number' : 'text'}
+                              value={
+                                typeof fixedValue === 'string' || typeof fixedValue === 'number'
+                                  ? fixedValue
+                                  : ''
+                              }
+                              onChange={(event) => {
+                                const value =
+                                  input.type === 'number'
+                                    ? event.target.value === ''
+                                      ? ''
+                                      : Number(event.target.value)
+                                    : event.target.value;
+                                setGraph((current) => ({
+                                  ...current,
+                                  nodes: current.nodes.map((node) =>
+                                    node.id === selectedNode.id
+                                      ? {
+                                          ...node,
+                                          fixedInputs: { ...node.fixedInputs, [input.name]: value },
+                                        }
+                                      : node
+                                  ),
+                                }));
+                              }}
+                            />
+                          )
+                        ) : (
+                          <Select
+                            items={uniqueSourceOptions}
+                            value={connectedValue}
+                            onValueChange={(value) => {
+                              const inputBindings = { ...selectedNode.inputBindings };
+                              const connections = graph.connections.filter(
+                                (item) =>
+                                  !(
+                                    item.targetNodeId === selectedNode.id &&
+                                    item.targetInputName === input.name
+                                  )
+                              );
+
+                              delete inputBindings[input.name];
+
+                              if (value?.startsWith('start:')) {
+                                inputBindings[input.name] = value.slice(6);
+                              } else if (value) {
+                                const source = JSON.parse(value) as {
+                                  nodeId: string;
+                                  outputName: string;
+                                };
+                                connections.push({
+                                  id: crypto.randomUUID(),
+                                  sourceNodeId: source.nodeId,
+                                  sourceOutputName: source.outputName,
+                                  targetInputName: input.name,
+                                  targetNodeId: selectedNode.id,
+                                });
+                              }
+
+                              setGraph((current) => ({
+                                ...current,
+                                connections,
+                                nodes: current.nodes.map((node) =>
+                                  node.id === selectedNode.id ? { ...node, inputBindings } : node
+                                ),
+                              }));
+                            }}
+                          >
+                            <SelectTrigger
+                              aria-label={t('workflow.connectedInputFor', { name: input.name })}
+                              className="h-9 w-full"
+                            >
+                              <SelectValue placeholder={t('workflow.selectConnectedInput')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {uniqueSourceOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                                {uniqueSourceOptions.length === 0 && (
+                                  <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                                    {t('workflow.noCompatibleInputs')}
+                                  </p>
+                                )}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {selectedNode && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setGraph((current) => ({
+                      ...current,
+                      connections: current.connections.filter(
+                        (connection) =>
+                          connection.sourceNodeId !== selectedNode.id &&
+                          connection.targetNodeId !== selectedNode.id
+                      ),
+                      nodes: current.nodes.filter((node) => node.id !== selectedNode.id),
+                    }));
+                    closeNodeDetails();
+                  }}
+                >
+                  {t('common.delete')}
+                </Button>
+              )}
+            </aside>
+          )}
+        </div>
+        <aside className="flex w-96 shrink-0 flex-col overflow-auto border-l bg-background">
+          <div className="grid grid-cols-2 gap-2 border-b p-2">
+            <Button
+              type="button"
+              variant={sidebarMode === 'board' ? 'secondary' : 'ghost'}
+              onClick={() => setSidebarMode('board')}
+            >
+              {t('workflow.board')}
+            </Button>
+            <Button
+              type="button"
+              variant={sidebarMode === 'toolbox' ? 'secondary' : 'ghost'}
+              onClick={() => setSidebarMode('toolbox')}
+            >
+              {t('workflow.toolbox')}
+            </Button>
+          </div>
+          {sidebarMode === 'toolbox' ? (
+            <>
+              <div className="flex flex-col gap-3 border-b p-4">
+                <div>
+                  <h2 className="font-semibold">{t('workflow.toolbox')}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">{t('workflow.toolboxHint')}</p>
+                </div>
+                <Input
+                  aria-label={t('workflow.searchAutomations')}
+                  placeholder={t('workflow.searchAutomations')}
+                  value={toolboxQuery}
+                  onChange={(event) => setToolboxQuery(event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-5 p-4">
+                {(['automation', 'workflow'] as const).map((type) => {
+                  const items = catalog.filter(
+                    (item) =>
+                      item.type === type &&
+                      item.name.toLowerCase().includes(toolboxQuery.trim().toLowerCase())
+                  );
+
+                  return (
+                    <section key={type} className="flex flex-col gap-2">
+                      <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {type === 'automation'
+                          ? t('workflow.automations')
+                          : t('workflow.workflows')}
+                      </h3>
+                      {items.map((item) => (
+                        <Button
+                          key={item.id}
+                          className="h-auto justify-start py-2.5"
+                          draggable
+                          type="button"
+                          variant="outline"
+                          onDragStart={(event) => {
+                            event.dataTransfer.effectAllowed = 'copy';
+                            event.dataTransfer.setData(
+                              'application/eva-runnable',
+                              JSON.stringify({ id: item.id, type: item.type })
+                            );
+                          }}
+                          onClick={() => addRunnable(item)}
+                        >
+                          {type === 'automation' ? (
+                            <BotIcon data-icon="inline-start" />
+                          ) : (
+                            <WorkflowIcon data-icon="inline-start" />
+                          )}
+                          {item.name}
+                        </Button>
+                      ))}
+                      {items.length === 0 && (
+                        <p className="rounded-md border border-dashed px-3 py-4 text-xs text-muted-foreground">
+                          {t('workflow.noItems', { type })}
+                        </p>
                       )}
-                    </div>
+                    </section>
                   );
                 })}
               </div>
-            )}
-            {selectedNode && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setGraph((current) => ({
-                    ...current,
-                    connections: current.connections.filter(
-                      (connection) =>
-                        connection.sourceNodeId !== selectedNode.id &&
-                        connection.targetNodeId !== selectedNode.id
-                    ),
-                    nodes: current.nodes.filter((node) => node.id !== selectedNode.id),
-                  }));
-                  setSelectedNodeId(undefined);
-                }}
-              >
-                {t('common.delete')}
-              </Button>
-            )}
-          </aside>
-        )}
-        {isToolboxOpen && (
-          <aside className="absolute inset-y-0 right-0 z-20 flex w-84 flex-col overflow-auto border-l bg-background shadow-lg">
-            <div className="flex flex-col gap-3 border-b p-4">
-              <div>
-                <h2 className="font-semibold">{t('workflow.toolbox')}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">{t('workflow.toolboxHint')}</p>
-              </div>
-              <Input
-                aria-label={t('workflow.searchAutomations')}
-                placeholder={t('workflow.searchAutomations')}
-                value={toolboxQuery}
-                onChange={(event) => setToolboxQuery(event.target.value)}
-              />
-            </div>
+            </>
+          ) : (
             <div className="flex flex-col gap-5 p-4">
-              {(['automation', 'workflow'] as const).map((type) => {
-                const items = catalog.filter(
-                  (item) =>
-                    item.type === type &&
-                    item.name.toLowerCase().includes(toolboxQuery.trim().toLowerCase())
+              <h2 className="font-semibold">{t('workflow.board')}</h2>
+              {(['flow', 'automation', 'workflow'] as const).map((type) => {
+                const items = boardItems.filter((item) =>
+                  type === 'flow'
+                    ? item.type === 'start' || item.type === 'end'
+                    : item.type === type
                 );
+                const label =
+                  type === 'flow'
+                    ? t('workflow.flow')
+                    : type === 'automation'
+                      ? t('workflow.automations')
+                      : t('workflow.workflows');
 
                 return (
                   <section key={type} className="flex flex-col gap-2">
                     <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      {type === 'automation' ? t('workflow.automations') : t('workflow.workflows')}
+                      {label}
                     </h3>
                     {items.map((item) => (
                       <Button
                         key={item.id}
                         className="h-auto justify-start py-2.5"
-                        draggable
                         type="button"
                         variant="outline"
-                        onDragStart={(event) => {
-                          event.dataTransfer.effectAllowed = 'copy';
-                          event.dataTransfer.setData(
-                            'application/eva-runnable',
-                            JSON.stringify({ id: item.id, type: item.type })
-                          );
-                        }}
-                        onClick={() => addRunnable(item)}
+                        onClick={() => openNodeDetails(item.id)}
                       >
-                        {type === 'automation' ? (
+                        {item.type === 'automation' ? (
                           <BotIcon data-icon="inline-start" />
-                        ) : (
+                        ) : item.type === 'workflow' ? (
                           <WorkflowIcon data-icon="inline-start" />
+                        ) : item.type === 'start' ? (
+                          <PlayIcon data-icon="inline-start" />
+                        ) : (
+                          <LogOutIcon data-icon="inline-start" />
                         )}
-                        {item.name}
+                        {item.label}
                       </Button>
                     ))}
-                    {items.length === 0 && (
-                      <p className="rounded-md border border-dashed px-3 py-4 text-xs text-muted-foreground">
-                        {t('workflow.noItems', { type })}
-                      </p>
-                    )}
                   </section>
                 );
               })}
             </div>
-          </aside>
-        )}
+          )}
+        </aside>
       </div>
       <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <SheetContent>
