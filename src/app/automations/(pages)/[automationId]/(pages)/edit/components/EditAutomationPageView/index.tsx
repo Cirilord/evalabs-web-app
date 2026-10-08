@@ -4,7 +4,7 @@ import { LoaderCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { AutomationFormView } from '@/components/AutomationFormView';
-import { useAutomation } from '@/hooks/useAutomation';
+import { useAutomation } from '@/hooks/use-automation';
 
 import { type EditAutomationPageViewProps } from './types';
 

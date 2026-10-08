@@ -4,7 +4,7 @@ import { LoaderCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { WorkflowCanvas } from '@/components/WorkflowCanvas';
-import { useWorkflowCatalog } from '@/hooks/useWorkflowCatalog';
+import { useWorkflowCatalog } from '@/hooks/use-workflow-catalog';
 import { createWorkflowGraph } from '@/lib/workflows';
 
 import { type NewWorkflowPageViewProps } from './types';

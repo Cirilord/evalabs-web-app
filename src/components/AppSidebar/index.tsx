@@ -21,10 +21,10 @@ import {
 } from '@/ui/sidebar';
 
 import { SettingsDialog } from './components/SettingsDialog';
-import { useAutomations } from './hooks/useAutomations';
-import { useAutomationStatuses } from './hooks/useAutomationStatuses';
-import { useWorkflows } from './hooks/useWorkflows';
-import { useWorkflowStatuses } from './hooks/useWorkflowStatuses';
+import { useAutomationStatuses } from './hooks/use-automation-statuses';
+import { useAutomations } from './hooks/use-automations';
+import { useWorkflowStatuses } from './hooks/use-workflow-statuses';
+import { useWorkflows } from './hooks/use-workflows';
 import { type SidebarItemStatus } from './types';
 
 function getRunIndicator(status: SidebarItemStatus | undefined, t: (key: string) => string) {

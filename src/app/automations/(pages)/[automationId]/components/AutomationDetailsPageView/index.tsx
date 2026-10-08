@@ -3,7 +3,7 @@
 import { LoaderCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { useAutomation } from '@/hooks/useAutomation';
+import { useAutomation } from '@/hooks/use-automation';
 
 import { AutomationDetailsView } from '../AutomationDetailsView';
 import { type AutomationDetailsPageViewProps } from './types';

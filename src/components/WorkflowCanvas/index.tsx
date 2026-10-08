@@ -32,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 import {
   AutomationExecutionError,
   runAutomationInBrowser,
-} from '@/app/automations/(pages)/[automationId]/components/RunAutomationButton/hooks/useAutomationRunner';
+} from '@/app/automations/(pages)/[automationId]/components/RunAutomationButton/hooks/use-automation-runner';
 import { useRunner } from '@/contexts/RunnerProvider';
 import { queryKeys } from '@/lib/query-keys';
 import {
@@ -63,7 +63,7 @@ import { Textarea } from '@/ui/textarea';
 import { EndDetailsPanel } from './components/EndDetailsPanel';
 import { RunWorkflowDialog } from './components/RunWorkflowDialog';
 import { StartDetailsPanel } from './components/StartDetailsPanel';
-import { useWorkflowViewport } from './hooks/useWorkflowViewport';
+import { useWorkflowViewport } from './hooks/use-workflow-viewport';
 import { type WorkflowCanvasProps, type WorkflowRunHistory } from './types';
 
 type CanvasNode = Node<

@@ -30,7 +30,7 @@ src/app/
 │   │       │       ├── index.tsx
 │   │       │       └── types.ts
 │   │       ├── hooks/
-│   │       │   └── useUser.ts
+│   │       │   └── use-user.ts
 │   │       ├── schema/
 │   │       │   └── user.schema.ts
 │   │       ├── action.ts
@@ -41,7 +41,7 @@ src/app/
 │   │       ├── index.tsx
 │   │       └── types.ts
 │   ├── hooks/
-│   │   └── useDashboard.ts
+│   │   └── use-dashboard.ts
 │   ├── schema/
 │   │   └── dashboard.schema.ts
 │   ├── action.ts
@@ -70,7 +70,7 @@ OverviewCard/
 │       ├── index.tsx
 │       └── types.ts
 ├── hooks/
-│   └── useOverviewCard.ts
+│   └── use-overview-card.ts
 ├── schema/
 │   └── overview-card.schema.ts
 ├── action.ts

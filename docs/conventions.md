@@ -81,7 +81,7 @@ The `page.tsx` filename is the only exception to the `index.tsx` entry-file rule
 - Component-specific hooks belong in `hooks/` inside the component directory.
 - Route-specific hooks belong in `hooks/` inside the route directory.
 - Shared hooks belong in `src/hooks/`.
-- Name hook files using the `useHookName.ts` convention.
+- Name hook files using the `use-hook-name.ts` convention.
 - Component-specific Zod schemas belong in `schema/` inside the component directory.
 - Route-specific Zod schemas belong in `schema/` inside the route directory.
 - Name schema files with the `.schema.ts` suffix.
