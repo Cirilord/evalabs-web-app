@@ -25,7 +25,7 @@ import {
   TriangleAlertIcon,
   WorkflowIcon,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -253,9 +253,10 @@ function EndNode(props: NodeProps<CanvasNode>) {
 const NODE_TYPES = { end: EndNode, runnable: RunnableNode, start: StartNode };
 
 export function WorkflowCanvas(props: WorkflowCanvasProps) {
-  const { catalog, graph: initialGraph, runs: initialRuns } = props;
+  const { backHref, catalog, graph: initialGraph, runs: initialRuns } = props;
   const { i18n, t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [graph, setGraph] = useState<WorkflowGraph>(initialGraph);
   const [isSaving, setIsSaving] = useState(false);
@@ -866,6 +867,12 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
   return (
     <main className="flex h-full min-h-0 flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b p-3">
+        {backHref && (
+          <Button type="button" variant="outline" onClick={() => router.push(backHref)}>
+            <ArrowLeftIcon data-icon="inline-start" />
+            {t('common.back')}
+          </Button>
+        )}
         <Input
           aria-label={t('workflow.name')}
           className="max-w-64"
@@ -888,7 +895,12 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         >
           {t('workflow.save')}
         </Button>
-        <RunWorkflowDialog inputs={graph.inputs} isRunning={isRunning} onRun={runWorkflow} />
+        <RunWorkflowDialog
+          defaultOpen={searchParams.get('run') === 'true'}
+          inputs={graph.inputs}
+          isRunning={isRunning}
+          onRun={runWorkflow}
+        />
         {errors.length > 0 && (
           <Popover open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
             <PopoverTrigger

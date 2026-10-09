@@ -5,26 +5,26 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/ui/dialog';
 import { Field, FieldGroup, FieldLabel } from '@/ui/field';
 import { Input } from '@/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/ui/sheet';
 
 import { type RunWorkflowDialogProps } from './types';
 
 export function RunWorkflowDialog(props: RunWorkflowDialogProps) {
-  const { inputs, isRunning, onRun } = props;
+  const { defaultOpen = false, inputs, isRunning, onRun } = props;
   const { t } = useTranslation();
   const [error, setError] = useState('');
   const [files, setFiles] = useState<Record<string, File>>({});
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [values, setValues] = useState<Record<string, boolean | number | string>>({});
 
   function resetValues() {
@@ -59,7 +59,7 @@ export function RunWorkflowDialog(props: RunWorkflowDialogProps) {
   }
 
   return (
-    <Sheet
+    <Dialog
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open);
@@ -68,14 +68,14 @@ export function RunWorkflowDialog(props: RunWorkflowDialogProps) {
         }
       }}
     >
-      <SheetTrigger render={<Button disabled={isRunning} type="button" />}>
+      <DialogTrigger render={<Button disabled={isRunning} type="button" />}>
         {t('workflow.run')}
-      </SheetTrigger>
-      <SheetContent className="gap-0 overflow-y-auto p-0" side="right">
-        <SheetHeader className="shrink-0 border-b px-6 py-5">
-          <SheetTitle>{t('workflow.run')}</SheetTitle>
-          <SheetDescription>{t('workflow.runDescription')}</SheetDescription>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden p-0 sm:max-w-xl">
+        <DialogHeader className="shrink-0 border-b px-6 py-5">
+          <DialogTitle>{t('workflow.run')}</DialogTitle>
+          <DialogDescription>{t('workflow.runDescription')}</DialogDescription>
+        </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           {inputs.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('workflow.runNoInputs')}</p>
@@ -148,7 +148,7 @@ export function RunWorkflowDialog(props: RunWorkflowDialogProps) {
           )}
           {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
         </div>
-        <SheetFooter className="shrink-0 border-t px-6 py-4">
+        <DialogFooter className="shrink-0 border-t px-6 py-4">
           <Button disabled={isRunning} type="button" onClick={() => void handleRun()}>
             {isRunning ? t('runs.running') : t('workflow.run')}
           </Button>
@@ -160,8 +160,8 @@ export function RunWorkflowDialog(props: RunWorkflowDialogProps) {
           >
             {t('common.cancel')}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

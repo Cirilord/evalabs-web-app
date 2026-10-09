@@ -3,9 +3,9 @@
 import { LoaderCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { WorkflowCanvas } from '@/components/WorkflowCanvas';
 import { useWorkflowCanvasData } from '@/hooks/use-workflow-canvas-data';
 
+import { WorkflowDetailsView } from '../WorkflowDetailsView';
 import { type WorkflowDetailsPageViewProps } from './types';
 
 export function WorkflowDetailsPageView(props: WorkflowDetailsPageViewProps) {
@@ -30,5 +30,5 @@ export function WorkflowDetailsPageView(props: WorkflowDetailsPageViewProps) {
     );
   }
 
-  return <WorkflowCanvas catalog={data.catalog} graph={data.graph} runs={data.runs} />;
+  return <WorkflowDetailsView data={data} />;
 }

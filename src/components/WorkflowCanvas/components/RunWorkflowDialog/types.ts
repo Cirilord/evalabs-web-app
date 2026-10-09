@@ -1,6 +1,7 @@
 import { type WorkflowInput } from '@/lib/workflows';
 
 export type RunWorkflowDialogProps = Readonly<{
+  defaultOpen?: boolean;
   inputs: WorkflowInput[];
   isRunning: boolean;
   onRun: (

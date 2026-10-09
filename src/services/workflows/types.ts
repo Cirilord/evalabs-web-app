@@ -4,6 +4,10 @@ export type WorkflowIdentifier = Readonly<{
   id: string;
 }>;
 
+export type WorkflowIdInput = Readonly<{
+  workflowId: string;
+}>;
+
 export type WorkflowRunHistory = Readonly<{
   error: string;
   finishedAt: Date | null;

@@ -41,6 +41,47 @@ export function toWorkflowGraph(workflow: WorkflowPersistenceRecord): WorkflowGr
   };
 }
 
+export function getCloneWorkflowName(name: string): string {
+  const suffix = ' copy';
+
+  return `${name.slice(0, 100 - suffix.length).trimEnd()}${suffix}`;
+}
+
+export function cloneWorkflowGraph(graph: WorkflowGraph): WorkflowGraph {
+  const nodeIds = new Map(graph.nodes.map((node) => [node.id, crypto.randomUUID()]));
+  const startId = crypto.randomUUID();
+  const outputId = crypto.randomUUID();
+
+  return {
+    ...graph,
+    connections: graph.connections.map((connection) => ({
+      ...connection,
+      id: crypto.randomUUID(),
+      sourceNodeId: nodeIds.get(connection.sourceNodeId) ?? connection.sourceNodeId,
+      targetNodeId: nodeIds.get(connection.targetNodeId) ?? connection.targetNodeId,
+    })),
+    id: crypto.randomUUID(),
+    name: getCloneWorkflowName(graph.name),
+    nodes: graph.nodes.map((node) => ({ ...node, id: nodeIds.get(node.id) ?? node.id })),
+    output: {
+      ...graph.output,
+      id: outputId,
+      sources: graph.output.sources.map((source) => nodeIds.get(source) ?? source),
+    },
+    outputBindings: Object.fromEntries(
+      Object.entries(graph.outputBindings).map(([name, binding]) => [
+        name,
+        { ...binding, nodeId: nodeIds.get(binding.nodeId) ?? binding.nodeId },
+      ])
+    ),
+    start: {
+      ...graph.start,
+      id: startId,
+      targets: graph.start.targets.map((target) => nodeIds.get(target) ?? target),
+    },
+  };
+}
+
 export function toWorkflowRunHistory(
   runs: ReadonlyArray<WorkflowRunPersistenceRecord>
 ): WorkflowRunHistory[] {
