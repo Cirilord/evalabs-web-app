@@ -135,6 +135,62 @@ Apply the contract above with these specific user instructions:
     'onboarding.welcomeDescription': 'Your desktop automation workspace is ready.',
     'onboarding.welcomeHint':
       'Set your preferences now. You can change everything later in Settings.',
+    'tutorial.automationDescription':
+      'Automations run a focused Python script. Define its inputs and outputs, then run it whenever you need.',
+    'tutorial.automationTitle': 'Create automations',
+    'tutorial.automationStepOne': 'Use inputs to make the script reusable for different tasks.',
+    'tutorial.automationStepTwo':
+      'Choose typed outputs so their results can be reused in workflows.',
+    'tutorial.back': 'Back',
+    'tutorial.finish': 'Start automating',
+    'tutorial.inputsDescription':
+      'Inputs are the values your automation receives when it runs. They make one script useful for many different requests.',
+    'tutorial.inputsStepOne':
+      'Give each input a name, type, optional description, and whether it is required.',
+    'tutorial.inputsStepTwo': "Read a value with inputs.get('name') inside main(inputs).",
+    'tutorial.inputsTitle': 'Receive inputs',
+    'tutorial.inputBooleanValue': 'true or false',
+    'tutorial.inputFileValue': 'an uploaded file',
+    'tutorial.inputNumberValue': 'a finite number',
+    'tutorial.inputTextValue': 'a string',
+    'tutorial.next': 'Next',
+    'tutorial.progress': 'Tutorial progress',
+    'tutorial.pythonDescription':
+      'Write Python directly in EVA Labs. Scripts run privately in your browser and can return text, numbers, booleans, and files.',
+    'tutorial.pythonTitle': 'Write Python scripts',
+    'tutorial.pythonStepOne': 'Implement main(inputs) and use inputs.get() to read values safely.',
+    'tutorial.pythonStepTwo':
+      'In this example, report is the generated value and becomes the report output for a workflow to use.',
+    'tutorial.previewAutomation': 'Generate report',
+    'tutorial.previewEnd': 'End',
+    'tutorial.previewFile': 'File',
+    'tutorial.previewInput': 'Input',
+    'tutorial.previewInputs': 'Automation inputs',
+    'tutorial.previewNumber': 'Number',
+    'tutorial.previewOutput': 'Output',
+    'tutorial.previewOutputs': 'Automation outputs',
+    'tutorial.previewPython': 'Python',
+    'tutorial.previewStart': 'Start',
+    'tutorial.previewText': 'Text',
+    'tutorial.welcome': 'Welcome to EVA Labs',
+    'tutorial.workflowDescription':
+      'Workflows connect automations on a visual board. Pass values and files between steps to build a complete process.',
+    'tutorial.outputsDescription':
+      'Outputs are the results produced by an automation. They can be text, numbers, booleans, or generated files.',
+    'tutorial.outputsStepOne':
+      'Register an output with the same name and type used by your Python script.',
+    'tutorial.outputsStepTwo':
+      'Use Outputs().add(name, value) to make it available to runs and workflows.',
+    'tutorial.outputsTitle': 'Publish outputs',
+    'tutorial.outputBooleanValue': 'true or false',
+    'tutorial.outputFileValue': 'a file path or file descriptor',
+    'tutorial.outputNumberValue': 'a finite number',
+    'tutorial.outputTextValue': 'a string',
+    'tutorial.previewBoolean': 'Boolean',
+    'tutorial.workflowTitle': 'Connect workflows',
+    'tutorial.workflowStepOne':
+      'Add automations to the board and connect matching input and output types.',
+    'tutorial.workflowStepTwo': 'Run the workflow once to execute every connected step in order.',
     'runner.installPython': 'Install Python {{version}}',
     'runner.noSystemPython': 'No system Python detected. Install a managed runner to continue.',
     'runner.pythonActive': 'Python {{version}} active',
@@ -445,6 +501,65 @@ Aplique o contrato acima seguindo estas instruções específicas:
     'onboarding.welcomeDescription': 'Seu espaço de trabalho para automações está pronto.',
     'onboarding.welcomeHint':
       'Defina suas preferências agora. Você pode mudar tudo depois em Configurações.',
+    'tutorial.automationDescription':
+      'Automações executam um script Python específico. Defina as entradas e saídas e execute quando precisar.',
+    'tutorial.automationTitle': 'Crie automações',
+    'tutorial.automationStepOne':
+      'Use entradas para tornar o script reutilizável em diferentes tarefas.',
+    'tutorial.automationStepTwo':
+      'Escolha saídas tipadas para reutilizar os resultados em workflows.',
+    'tutorial.back': 'Voltar',
+    'tutorial.finish': 'Começar a automatizar',
+    'tutorial.inputsDescription':
+      'Entradas são os valores que sua automação recebe ao executar. Elas tornam um script útil para várias solicitações diferentes.',
+    'tutorial.inputsStepOne':
+      'Dê a cada entrada um nome, tipo, descrição opcional e defina se ela é obrigatória.',
+    'tutorial.inputsStepTwo': "Leia um valor com inputs.get('name') dentro de main(inputs).",
+    'tutorial.inputsTitle': 'Receba entradas',
+    'tutorial.inputBooleanValue': 'true ou false',
+    'tutorial.inputFileValue': 'um arquivo enviado',
+    'tutorial.inputNumberValue': 'um número finito',
+    'tutorial.inputTextValue': 'uma string',
+    'tutorial.next': 'Próximo',
+    'tutorial.progress': 'Progresso do tutorial',
+    'tutorial.pythonDescription':
+      'Escreva Python diretamente no EVA Labs. Os scripts são executados de forma privada no seu navegador e podem retornar textos, números, booleanos e arquivos.',
+    'tutorial.pythonTitle': 'Escreva scripts Python',
+    'tutorial.pythonStepOne':
+      'Implemente main(inputs) e use inputs.get() para ler valores com segurança.',
+    'tutorial.pythonStepTwo':
+      'Neste exemplo, report é o valor gerado e se torna a saída report para um workflow usar.',
+    'tutorial.previewAutomation': 'Gerar relatório',
+    'tutorial.previewEnd': 'Fim',
+    'tutorial.previewFile': 'Arquivo',
+    'tutorial.previewInput': 'Entrada',
+    'tutorial.previewInputs': 'Entradas da automação',
+    'tutorial.previewNumber': 'Número',
+    'tutorial.previewOutput': 'Saída',
+    'tutorial.previewOutputs': 'Saídas da automação',
+    'tutorial.previewPython': 'Python',
+    'tutorial.previewStart': 'Início',
+    'tutorial.previewText': 'Texto',
+    'tutorial.welcome': 'Boas-vindas ao EVA Labs',
+    'tutorial.workflowDescription':
+      'Workflows conectam automações em um quadro visual. Passe valores e arquivos entre etapas para criar um processo completo.',
+    'tutorial.outputsDescription':
+      'Saídas são os resultados produzidos por uma automação. Elas podem ser textos, números, booleanos ou arquivos gerados.',
+    'tutorial.outputsStepOne':
+      'Registre uma saída com o mesmo nome e tipo usados pelo seu script Python.',
+    'tutorial.outputsStepTwo':
+      'Use Outputs().add(name, value) para deixá-la disponível nas execuções e workflows.',
+    'tutorial.outputsTitle': 'Publique saídas',
+    'tutorial.outputBooleanValue': 'true ou false',
+    'tutorial.outputFileValue': 'um caminho ou descritor de arquivo',
+    'tutorial.outputNumberValue': 'um número finito',
+    'tutorial.outputTextValue': 'uma string',
+    'tutorial.previewBoolean': 'Booleano',
+    'tutorial.workflowTitle': 'Conecte workflows',
+    'tutorial.workflowStepOne':
+      'Adicione automações ao quadro e conecte entradas e saídas de tipos compatíveis.',
+    'tutorial.workflowStepTwo':
+      'Execute o workflow uma vez para rodar cada etapa conectada na ordem certa.',
     'runner.installPython': 'Instalar Python {{version}}',
     'runner.noSystemPython':
       'Nenhum Python do sistema foi encontrado. Instale um executor gerenciado para continuar.',
