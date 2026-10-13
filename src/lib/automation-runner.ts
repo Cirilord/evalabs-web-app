@@ -1,7 +1,8 @@
 import 'client-only';
 
+import { type AutomationArtifact, persistAutomationArtifact } from '@/lib/automation-artifacts';
 import { type PyodideRunnerId } from '@/lib/runner';
-import { type AutomationLibrary } from '@/services/automations/types';
+import { type AutomationLibrary, type AutomationOutput } from '@/services/automations/types';
 
 export class AutomationExecutionError extends Error {
   public readonly logs: string;
@@ -14,18 +15,23 @@ export class AutomationExecutionError extends Error {
 
 export type AutomationExecutionResult = Readonly<{
   logs: string;
-  outputs: unknown;
+  outputs: Record<string, unknown>;
   runnerVersion: string;
 }>;
 
 type RunAutomationInBrowserOptions = Readonly<{
-  expectsOutputs: boolean;
   files: Readonly<Record<string, File>>;
   inputs: Readonly<Record<string, boolean | number | string>>;
   libraries: readonly AutomationLibrary[];
+  outputSchema: readonly AutomationOutput[];
   runnerId: PyodideRunnerId;
   script: string;
 }>;
+
+type WorkerExecutionResult = AutomationExecutionResult &
+  Readonly<{
+    artifacts: readonly AutomationArtifact[];
+  }>;
 
 type WorkerMessage =
   | Readonly<{
@@ -36,13 +42,13 @@ type WorkerMessage =
     }>
   | Readonly<{
       requestId: string;
-      result: AutomationExecutionResult;
+      result: WorkerExecutionResult;
       type: 'succeeded';
     }>;
 
 type PendingExecution = Readonly<{
   reject: (reason: Error) => void;
-  resolve: (result: AutomationExecutionResult) => void;
+  resolve: (result: WorkerExecutionResult) => void;
 }>;
 
 let executionWorker: Worker | undefined;
@@ -94,8 +100,19 @@ export function runAutomationInBrowser(
   const requestId = `automation-run-${requestCount++}`;
   const worker = getExecutionWorker();
 
-  return new Promise((resolve, reject) => {
+  return new Promise<WorkerExecutionResult>((resolve, reject) => {
     pendingExecutions.set(requestId, { reject, resolve });
     worker.postMessage({ ...options, requestId, type: 'run' });
+  }).then(async (execution) => {
+    const outputs = { ...execution.outputs };
+
+    await Promise.all(
+      execution.artifacts.map(async (artifact) => {
+        const reference = await persistAutomationArtifact(artifact);
+        outputs[artifact.outputName] = reference;
+      })
+    );
+
+    return { logs: execution.logs, outputs, runnerVersion: execution.runnerVersion };
   });
 }

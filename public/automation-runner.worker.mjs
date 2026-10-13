@@ -21,6 +21,84 @@ function getInputFilePath(inputName, file) {
   return `/tmp/${inputName}-${safeFileName}`;
 }
 
+function getArtifactDescriptor(value) {
+  if (typeof value === 'string') {
+    return { path: value };
+  }
+
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    typeof value.path !== 'string'
+  ) {
+    throw new TypeError('File outputs must be a file path or an object with a path property.');
+  }
+
+  return value;
+}
+
+function getMimeType(fileName) {
+  const extension = fileName.split('.').at(-1)?.toLowerCase();
+  const mimeTypes = {
+    csv: 'text/csv',
+    json: 'application/json',
+    pdf: 'application/pdf',
+    txt: 'text/plain',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
+
+  return mimeTypes[extension] ?? 'application/octet-stream';
+}
+
+function normalizeOutputs(pyodide, outputs, outputSchema) {
+  if (!outputs || typeof outputs !== 'object' || Array.isArray(outputs)) {
+    throw new TypeError('main must return an Outputs instance or a dictionary.');
+  }
+
+  const configuredOutputs = new Map(outputSchema.map((output) => [output.name, output]));
+  const normalizedOutputs = {};
+  const artifacts = [];
+
+  for (const [name, value] of Object.entries(outputs)) {
+    const output = configuredOutputs.get(name);
+    if (!output) {
+      throw new TypeError(`Output "${name}" is not configured for this automation.`);
+    }
+
+    if (output.type === 'boolean' && typeof value !== 'boolean') {
+      throw new TypeError(`Output "${name}" must be a boolean.`);
+    }
+    if (output.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value))) {
+      throw new TypeError(`Output "${name}" must be a finite number.`);
+    }
+    if (output.type === 'text' && typeof value !== 'string') {
+      throw new TypeError(`Output "${name}" must be text.`);
+    }
+    if (output.type === 'file') {
+      const descriptor = getArtifactDescriptor(value);
+      const content = pyodide.FS.readFile(descriptor.path);
+      const fileName = descriptor.name ?? descriptor.path.split('/').filter(Boolean).at(-1);
+
+      if (!fileName) {
+        throw new TypeError(`Output "${name}" must reference a file name.`);
+      }
+
+      artifacts.push({
+        content: content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength),
+        mimeType: descriptor.mimeType ?? getMimeType(fileName),
+        name: fileName,
+        outputName: name,
+      });
+      continue;
+    }
+
+    normalizedOutputs[name] = value;
+  }
+
+  return { artifacts, outputs: normalizedOutputs };
+}
+
 function getPyodide(runnerId) {
   const runner = PYODIDE_RUNNERS[runnerId];
   if (!runner) {
@@ -46,7 +124,7 @@ function getPyodide(runnerId) {
 }
 
 async function executeAutomation(message) {
-  const { expectsOutputs, files, inputs, libraries, runnerId, script } = message;
+  const { files, inputs, libraries, outputSchema, runnerId, script } = message;
   const logs = [];
   const runner = PYODIDE_RUNNERS[runnerId];
   const pyodide = await getPyodide(runnerId);
@@ -69,22 +147,71 @@ async function executeAutomation(message) {
     pyodide.setStderr({ batched: (output) => logs.push(output) });
 
     const executionInputs = { ...inputs };
+    const inputFiles = {};
     for (const [inputName, file] of Object.entries(files)) {
       const filePath = getInputFilePath(inputName, file);
       pyodide.FS.writeFile(filePath, new Uint8Array(await file.arrayBuffer()));
       executionInputs[inputName] = filePath;
+      inputFiles[inputName] = { mimeType: file.type, name: file.name, path: filePath };
     }
 
     const serializedInputs = JSON.stringify(executionInputs);
-    const invocation = Object.keys(executionInputs).length > 0 ? 'main(__eva_inputs)' : 'main()';
+    const serializedInputFiles = JSON.stringify(inputFiles);
     const serializedOutputs = await pyodide.runPythonAsync(
-      `${script}\n\nimport json\n__eva_inputs = json.loads(${JSON.stringify(serializedInputs)})\n__eva_outputs = ${invocation}\nif ${expectsOutputs ? 'not isinstance(__eva_outputs, dict)' : 'False'}:\n    raise TypeError('main must return a dict.')\njson.dumps(__eva_outputs if ${expectsOutputs ? 'True' : 'False'} else {})`,
+      `import inspect
+import json
+import sys
+import types
+
+class InputFile:
+    def __init__(self, path, name, mime_type):
+        self.path = path
+        self.name = name
+        self.mime_type = mime_type
+
+    def read_bytes(self):
+        with open(self.path, "rb") as file:
+            return file.read()
+
+    def read_text(self, encoding="utf-8"):
+        with open(self.path, "r", encoding=encoding) as file:
+            return file.read()
+
+class Inputs(dict):
+    def __init__(self, values, files):
+        super().__init__(values)
+        for name, file in files.items():
+            self[name] = InputFile(file["path"], file["name"], file["mimeType"])
+
+class Outputs(dict):
+    def add(self, name, value):
+        self[name] = value
+        return self
+
+__eva_module = types.ModuleType("eva")
+__eva_module.InputFile = InputFile
+__eva_module.Inputs = Inputs
+__eva_module.Outputs = Outputs
+sys.modules["eva"] = __eva_module
+
+${script}
+
+__eva_inputs = Inputs(json.loads(${JSON.stringify(serializedInputs)}), json.loads(${JSON.stringify(serializedInputFiles)}))
+__eva_outputs = main(__eva_inputs) if len(inspect.signature(main).parameters) else main()
+json.dumps(__eva_outputs if __eva_outputs is not None else {})`,
       { filename: '<automation-script>' }
     );
 
+    const normalizedOutputs = normalizeOutputs(
+      pyodide,
+      JSON.parse(String(serializedOutputs)),
+      outputSchema
+    );
+
     return {
+      artifacts: normalizedOutputs.artifacts,
       logs: logs.join('\n'),
-      outputs: JSON.parse(String(serializedOutputs)),
+      outputs: normalizedOutputs.outputs,
       runnerVersion: `Pyodide ${runner.pyodideVersion} (Python ${runner.pythonVersion})`,
     };
   } catch (error) {

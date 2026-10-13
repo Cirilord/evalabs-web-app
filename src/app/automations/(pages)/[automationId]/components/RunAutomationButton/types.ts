@@ -10,11 +10,17 @@ export type AutomationLibrary = Readonly<{
   version: string;
 }>;
 
+export type AutomationRunOutput = Readonly<{
+  description: string;
+  name: string;
+  type: 'boolean' | 'file' | 'number' | 'text';
+}>;
+
 export type RunAutomationButtonProps = Readonly<{
   automationId: string;
   automationName: string;
-  expectsOutputs: boolean;
   inputs: readonly AutomationRunInput[];
   libraries: readonly AutomationLibrary[];
+  outputs: readonly AutomationRunOutput[];
   script: string;
 }>;

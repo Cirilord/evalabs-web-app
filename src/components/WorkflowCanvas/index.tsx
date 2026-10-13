@@ -30,6 +30,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useRunner } from '@/contexts/RunnerProvider';
+import {
+  getAutomationArtifactFile,
+  isAutomationArtifactReference,
+} from '@/lib/automation-artifacts';
 import { AutomationExecutionError, runAutomationInBrowser } from '@/lib/automation-runner';
 import { queryKeys } from '@/lib/query-keys';
 import {
@@ -669,6 +673,9 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
             ) {
               inputs[connection.targetInputName] = value;
             }
+            if (isAutomationArtifactReference(value)) {
+              files[connection.targetInputName] = await getAutomationArtifactFile(value);
+            }
           }
 
           setNodeStatuses((current) => ({ ...current, [node.id]: 'running' }));
@@ -707,10 +714,10 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
                     })()
                 : runnable.script
                   ? await runAutomationInBrowser({
-                      expectsOutputs: runnable.outputs.length > 0,
                       files,
                       inputs,
                       libraries: runnable.libraries ?? [],
+                      outputSchema: runnable.outputs,
                       runnerId,
                       script: runnable.script,
                     })

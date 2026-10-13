@@ -55,11 +55,9 @@ export function AutomationDetailsView(props: AutomationDetailsViewProps) {
             <RunAutomationButton
               automationId={automation.id}
               automationName={automation.name}
-              expectsOutputs={
-                (automation.outputsJson as unknown as readonly AutomationRunInput[]).length > 0
-              }
               inputs={automation.inputsJson as unknown as readonly AutomationRunInput[]}
               libraries={automation.librariesJson as unknown as readonly AutomationLibrary[]}
+              outputs={automation.outputsJson as unknown as readonly AutomationRunInput[]}
               script={automation.script}
             />
             <DeleteAutomationButton automationId={automation.id} automationName={automation.name} />

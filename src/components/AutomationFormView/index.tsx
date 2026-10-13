@@ -40,7 +40,14 @@ import { Textarea } from '@/ui/textarea';
 import { createAutomationSchema } from './schema/automation-form.schema';
 import { type AutomationFormViewProps, type AutomationFormViewValues } from './types';
 
-const DEFAULT_SCRIPT = `def main():\n  # Add your automation logic here.\n  pass\n`;
+const DEFAULT_SCRIPT = `from eva import Inputs, Outputs
+
+
+def main(inputs: Inputs):
+  outputs = Outputs()
+  # Add your automation logic here.
+  return outputs
+`;
 const PORT_TYPES = ['text', 'file', 'number', 'boolean'] as const;
 const PORT_TYPE_ITEMS = PORT_TYPES.map((type) => ({ label: type, value: type }));
 const LIBRARIES = [
@@ -97,14 +104,11 @@ export function AutomationFormView(props: AutomationFormViewProps) {
       name.includes(query.toLowerCase()) && !libraries.some((library) => library.name === name)
   );
 
-  function synchronizeMainInputs(inputCount: number) {
+  function synchronizeMainInputs() {
     const script = getValues('script');
     const mainFunction = script.match(/\bdef\s+main\s*\([^)]*\)/)?.[0];
     if (mainFunction) {
-      setValue(
-        'script',
-        script.replace(mainFunction, `def main(${inputCount ? 'inputs: dict' : ''})`)
-      );
+      setValue('script', script.replace(mainFunction, 'def main(inputs: Inputs)'));
     }
   }
   function addLibrary(name: string) {
@@ -169,7 +173,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
     const path = input ? (`inputs.${index}` as const) : (`outputs.${index}` as const);
     const removePort = () => {
       if (input) {
-        synchronizeMainInputs(fields.length - 1);
+        synchronizeMainInputs();
         remove(index);
         void trigger('script');
       } else {
@@ -386,7 +390,7 @@ export function AutomationFormView(props: AutomationFormViewProps) {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  synchronizeMainInputs(fields.length + 1);
+                  synchronizeMainInputs();
                   append({ description: '', name: '', required: false, type: 'text' });
                 }}
               >

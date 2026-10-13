@@ -62,10 +62,10 @@ export const createAutomationSchema = z
         message: 'Define only one main function.',
         path: ['script'],
       });
-    } else if (automation.inputs.length > 0 && !/\bdef\s+main\s*\(\s*inputs\b/.test(script)) {
+    } else if (!/\bdef\s+main\s*\(\s*inputs\b/.test(script)) {
       context.addIssue({
         code: 'custom',
-        message: 'Define main(inputs) when this automation has inputs.',
+        message: 'Define main(inputs) for the automation script.',
         path: ['script'],
       });
     } else if (/\binput\s*\(/.test(script)) {

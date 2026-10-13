@@ -5,6 +5,10 @@ import { useState } from 'react';
 
 import { RunWorkflowDialog } from '@/components/WorkflowCanvas/components/RunWorkflowDialog';
 import { useRunner } from '@/contexts/RunnerProvider';
+import {
+  getAutomationArtifactFile,
+  isAutomationArtifactReference,
+} from '@/lib/automation-artifacts';
 import { AutomationExecutionError, runAutomationInBrowser } from '@/lib/automation-runner';
 import { queryKeys } from '@/lib/query-keys';
 import { type WorkflowGraph, type WorkflowRunnable } from '@/lib/workflows';
@@ -70,6 +74,9 @@ export function RunWorkflowButton(props: RunWorkflowButtonProps) {
         const value = completedOutputs.get(connection.sourceNodeId)?.[connection.sourceOutputName];
         if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
           inputs[connection.targetInputName] = value;
+        }
+        if (isAutomationArtifactReference(value)) {
+          files[connection.targetInputName] = await getAutomationArtifactFile(value);
         }
       }
 
@@ -137,10 +144,10 @@ export function RunWorkflowButton(props: RunWorkflowButtonProps) {
     }
     if (runnable.type === 'automation' && runnable.script) {
       return runAutomationInBrowser({
-        expectsOutputs: runnable.outputs.length > 0,
         files,
         inputs,
         libraries: runnable.libraries ?? [],
+        outputSchema: runnable.outputs,
         runnerId,
         script: runnable.script,
       });

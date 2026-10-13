@@ -29,7 +29,7 @@ import { completeAutomationRunSchema, runAutomationSchema } from './schema/run-a
 import { type RunAutomationButtonProps } from './types';
 
 export function RunAutomationButton(props: RunAutomationButtonProps) {
-  const { automationId, automationName, expectsOutputs, inputs, libraries, script } = props;
+  const { automationId, automationName, inputs, libraries, outputs, script } = props;
   const { t } = useTranslation();
   const { runnerId } = useRunner();
   const runnerVersion = getPyodideRunnerLabel(runnerId);
@@ -100,7 +100,7 @@ export function RunAutomationButton(props: RunAutomationButtonProps) {
         files,
         inputs: normalizedInputs,
         libraries,
-        expectsOutputs,
+        outputSchema: outputs,
         runnerId,
         script,
       });
